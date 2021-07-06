@@ -354,7 +354,7 @@ endif
     WARNS += -Wformat=2 -Wnested-externs
     TEST_CFLAGS := $(CFLAGS)
 else
-	CROSS_COMPILE = $(TOOLS)/gcc-arm-none-eabi-*/bin/arm-none-eabi-
+    CROSS_COMPILE ?= $(TOOLS)/gcc-arm-none-eabi-*/bin/arm-none-eabi-
     #GNU GCC
     AS		 = $(CROSS_COMPILE)as
     LD		 = $(CROSS_COMPILE)ld

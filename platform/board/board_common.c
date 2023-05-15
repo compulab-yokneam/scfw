@@ -55,6 +55,12 @@
 #include "main/monitor.h"
 #include "test/common/test.h"
 #include "drivers/wdog32/fsl_wdog32.h"
+#include "drivers/sysctr/fsl_sysctr.h"
+#include "board/board_common.h"
+#ifndef SIMU
+    #include "dcd/dcd_retention.h"
+    #include "main/soc.h"
+#endif
 
 /* Forced Error */
 
@@ -195,7 +201,7 @@ void board_stdio(void)
 }
 
 /*--------------------------------------------------------------------------*/
-/* Shim for system exit                                                     */
+/* Shim for wdog disable                                                    */
 /*--------------------------------------------------------------------------*/
 void board_wdog_disable(sc_bool_t lp)
 {
@@ -210,8 +216,30 @@ void board_wdog_disable(sc_bool_t lp)
             /* Disable the WDOG */
             WDOG32_Deinit(WDOG_SC);
         }
-#endif    
+#endif
 }
+
+/*--------------------------------------------------------------------------*/
+/* Shim for DQS2DQ init                                                     */
+/*--------------------------------------------------------------------------*/
+void board_ddr_dqs2dq_init(void)
+{
+    #ifdef BD_LPDDR4_INC_DQS2DQ
+        soc_ddr_dqs2dq_init();
+    #endif
+}
+
+#if (!(defined(NO_DEVICE_ACCESS))) && defined(SWI_DQS2DQ_IRQn)
+/*--------------------------------------------------------------------------*/
+/* Shim for DQS2DQ periodic update                                          */
+/*--------------------------------------------------------------------------*/
+void board_ddr_dqs2dq_sync(void)
+{
+    #ifdef BD_LPDDR4_INC_DQS2DQ
+        soc_ddr_dqs2dq_sync();
+    #endif
+}
+#endif
 
 /*--------------------------------------------------------------------------*/
 /* Conditional printf                                                       */

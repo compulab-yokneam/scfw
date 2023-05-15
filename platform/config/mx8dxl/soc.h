@@ -257,6 +257,7 @@ typedef uint32_t sc_db_connect_t;
 /*! Chip versions */
 #define CHIP_VER_A0     0x0U
 #define CHIP_VER_A1     0x1U
+#define CHIP_VER_B0     0x2U
 
 /*! Macro to get JTAG ID */
 #ifndef SIMU
@@ -267,6 +268,9 @@ typedef uint32_t sc_db_connect_t;
     #endif
     #ifdef SREV_A1
         #define JTAG_ID ((CHIP_VER_A1 << 5U) | CHIP_ID_DXL)
+    #endif
+    #ifdef SREV_B0
+        #define JTAG_ID ((CHIP_VER_B0 << 5U) | CHIP_ID_DXL)
     #endif
 #endif
 
@@ -347,8 +351,8 @@ typedef uint32_t sc_db_connect_t;
 #define HAS_SECO_FW
 
 /*! Defines for FW versions */
-#define SECO_FW_VERSION ((0UL << 16) | (7UL << 4) | 5UL) 
-#define V2X_FW_VERSION ((0UL << 16) | (0UL << 4) | 8UL) 
+#define SECO_FW_VERSION ((3UL << 16) | (8UL << 4) | 2UL) 
+#define V2X_FW_VERSION ((1UL << 16) | (1UL << 4) | 1UL) 
 
 /*! Define DDR DATX8 Lanes */
 #define DWC_NO_OF_BYTES	        2U

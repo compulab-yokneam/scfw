@@ -52,7 +52,7 @@
 #define MX8DXL_H                        /**< Symbol preventing repeated inclusion */
 
 /* Check for valid CPU versions */
-#if !defined(SREV_A0) && !defined(SREV_A1)
+#if !defined(SREV_A0) && !defined(SREV_A1) && !defined(SREV_B0)
     #error "Invalid SOC revision!\n"
 #endif
 

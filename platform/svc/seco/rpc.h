@@ -87,6 +87,7 @@
 #define SECO_FUNC_FIPS_KEY_ZERO 31U /*!< Index for sc_seco_fips_key_zero() RPC call */
 #define SECO_FUNC_START_RNG 22U /*!< Index for sc_seco_start_rng() RPC call */
 #define SECO_FUNC_SAB_MSG 23U /*!< Index for sc_seco_sab_msg() RPC call */
+#define SECO_FUNC_CAAM_TD_CONFIG 33U /*!< Index for sc_seco_caam_td_config() RPC call */
 #define SECO_FUNC_SECVIO_ENABLE 25U /*!< Index for sc_seco_secvio_enable() RPC call */
 #define SECO_FUNC_SECVIO_CONFIG 26U /*!< Index for sc_seco_secvio_config() RPC call */
 #define SECO_FUNC_SECVIO_DGO_CONFIG 27U /*!< Index for sc_seco_secvio_dgo_config() RPC call */

@@ -129,6 +129,12 @@
     #define DEBUG_BAUD          115200U
 #endif
 
+/*!
+ * Define to force power transition of subsytems as workaround for KS1
+ * excess power errata
+ */
+#define BOARD_FORCE_ALL_SS_PWR_TRANS
+
 /* Local Types */
 
 /* Local Functions */
@@ -239,6 +245,19 @@ void board_init(boot_phase_t phase)
 
         /* Init PMIC if not already done */
         pmic_init();
+
+#ifdef BOARD_FORCE_ALL_SS_PWR_TRANS
+        uint32_t power_ctrl;
+        /* Check if LSIO subsytem has been powered up at least once */
+        power_ctrl = DSC_LSIO->POWER_CTRL[PD_SS].RW;
+        if (((power_ctrl & DSC_POWER_CTRL_PFET_LF_EN_MASK) == 0U) &&
+            ((power_ctrl & DSC_PWRCTRL_MAIN_RFF_MASK) == 0U))
+        {
+            /* Transition LSIO resource to ensure SS powered once prior to KS1 */
+            pm_force_resource_power_mode_v(SC_R_MU_0A, SC_PM_PW_MODE_ON);
+            pm_force_resource_power_mode_v(SC_R_MU_0A, SC_PM_PW_MODE_OFF);
+        }
+#endif
     }
     else if (phase == BOOT_PHASE_TEST_INIT)
     {
@@ -430,6 +449,10 @@ sc_bool_t board_rsrc_avail(sc_rsrc_t rsrc)
 /*--------------------------------------------------------------------------*/
 void board_qos_config(sc_sub_t ss)
 {
+    /* This function is to allow NXP support or professional services to
+     * perform such optimization for a customer or application. It is not
+     * intended for direct customer use.
+     */
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1375,6 +1398,20 @@ void board_fault(sc_bool_t restarted, sc_bfault_t reason,
             HALT;
         }
         /* Issue was before restart so just return */
+    #endif
+}
+
+/*--------------------------------------------------------------------------*/
+/* Handle SECO FW fault                                                     */
+/*--------------------------------------------------------------------------*/
+void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
+    sc_sfault_t reason)
+{
+    #ifdef DEBUG
+        error_print("SECO Abort (mod %d, ln %d)\n", abort_module,
+            abort_line);
+    #else
+        board_fault(SC_FALSE, BOARD_BFAULT_SEC_FAIL, SECO_PT);
     #endif
 }
 

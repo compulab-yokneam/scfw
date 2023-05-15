@@ -162,6 +162,8 @@ void ss_config_max_core_freq(sc_sub_t ss, ss_clock_t pll_index, ss_clock_t cpu_c
     dsc_clk_type_t pll_type, sc_pm_clock_rate_t max_rate);
 void ss_trans_power_mode_noxrdc(sc_sub_t ss, ss_idx_t ss_idx, ss_ridx_t
     rsrc_idx, sc_pm_power_mode_t from_mode, sc_pm_power_mode_t to_mode);
+sc_err_t ss_setup_bypass_parent(sc_sub_t ss, ss_clock_t clk_index,
+    ss_clock_t clk_index1, sc_pm_clk_parent_t parent_index1, sc_pm_clk_parent_t parent_index2);
 
 #ifdef XRDC_SUPPORT
     void ss_rdc_enable_check(void);

@@ -127,6 +127,7 @@
 #define SC_IRQ_BC_PAD            (1U << 4U)    /*!< Pad wakeup (broadcast to all partitions) */
 #define SC_IRQ_SW_WAKE           (1U << 5U)    /*!< Software requested wake */
 #define SC_IRQ_SECVIO            (1U << 6U)    /*!< Security violation */
+#define SC_IRQ_V2X_RESET         (1U << 7U)    /*!< V2X reset */
 /** @} */
 
 /*!

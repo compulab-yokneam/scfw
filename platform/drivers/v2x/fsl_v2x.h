@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 NXP
+ * Copyright 2019-2021 NXP
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -53,6 +53,11 @@
 /** @} */
 
 /* Types */
+
+/*!
+ * This type is used to return the RNG initialization status.
+ */
+typedef uint32_t sc_v2x_rng_stat_t;
 
 /* Functions */
 
@@ -116,6 +121,52 @@ void V2X_DumpDebug(uint32_t log_bitmap);
  * See the V2X API Reference Guide for more info.
  */
 void V2X_Ping(void);
+
+/*!
+ * This function configures the V2X ID ownership.
+ *
+ * @param[in]     id          index of ID 
+ * @param[in]     sa          secure state
+ * @param[in]     did         XRDC2 Domain ID
+ *
+ * Called by the Resource Manager to configure V2X ID parameters.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void V2X_ID_Config(uint8_t id, sc_rm_spa_t sa, sc_rm_did_t did);
+
+/*!
+ * This function configures V2X MU ownership.
+ *
+ * @param[in]     mu          index of MU
+ * @param[in]     sa          secure state
+ * @param[in]     did         XRDC2 Domain ID
+ *
+ * Called by the Resource Manager to configure V2X MU access.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void V2X_MU_Config(uint8_t mu, sc_rm_spa_t sa, sc_rm_did_t did);
+
+/*!
+ * This function notifies V2X of an MU power off.
+ *
+ * @param[in]     mu          index of MU
+ *
+ * Called by the Resource Manager to tell V2X MU is being powered off.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void V2X_MU_PowerDown(uint8_t mu);
+
+/*!
+ * This function starts the random number generators.
+ *
+ * @return Returns the state of RNGs.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+sc_v2x_rng_stat_t V2X_StartRNG(void);
 
 /*!
  * @brief V2X MU IRQ handler.

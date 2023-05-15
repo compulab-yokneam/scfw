@@ -293,6 +293,15 @@ sc_err_t seco_get_mp_sign(sc_rm_pt_t caller_pt, sc_faddr_t msg_addr,
 sc_err_t seco_sab_msg(sc_rm_pt_t caller_pt, sc_faddr_t addr);
 
 /*!
+ * Internal SC function to configure a CAAM job ring to allow it to make
+ * trusted descriptors.
+ *
+ * @see sc_seco_caam_td_config().
+ */
+sc_err_t seco_caam_td_config(sc_rm_pt_t caller_pt, sc_rsrc_t resource,
+    sc_bool_t allow, sc_bool_t lock);
+
+/*!
  * Internal SC function to enable the security violation interrupt.
  *
  * @see sc_seco_secvio_enable().

@@ -121,7 +121,7 @@
 #define SC_PM_PARENT_PLL0              1U    /*!< Parent is PLL0 */
 #define SC_PM_PARENT_PLL1              2U    /*!< Parent is PLL1 or PLL0/2 */
 #define SC_PM_PARENT_PLL2              3U    /*!< Parent in PLL2 or PLL0/4 */
-#define SC_PM_PARENT_BYPS              4U    /*!< Parent is a bypass clock. */
+#define SC_PM_PARENT_BYPS              4U    /*!< Parent is a bypass clock */
 /** @} */
 
 /*!
@@ -141,14 +141,14 @@
 #define SC_PM_RESET_REASON_JTAG        1U    /*!< JTAG reset */
 #define SC_PM_RESET_REASON_SW          2U    /*!< Software reset */
 #define SC_PM_RESET_REASON_WDOG        3U    /*!< Partition watchdog reset */
-#define SC_PM_RESET_REASON_LOCKUP      4U    /*!< SCU lockup reset */
+#define SC_PM_RESET_REASON_LOCKUP      4U    /*!< SECO lockup reset */
 #define SC_PM_RESET_REASON_SNVS        5U    /*!< SNVS reset */
 #define SC_PM_RESET_REASON_TEMP        6U    /*!< Temp panic reset */
 #define SC_PM_RESET_REASON_MSI         7U    /*!< MSI reset */
-#define SC_PM_RESET_REASON_UECC        8U    /*!< ECC reset */
+#define SC_PM_RESET_REASON_UECC        8U    /*!< SECO ECC reset */
 #define SC_PM_RESET_REASON_SCFW_WDOG   9U    /*!< SCFW watchdog reset */
 #define SC_PM_RESET_REASON_ROM_WDOG    10U   /*!< SCU ROM watchdog reset */
-#define SC_PM_RESET_REASON_SECO        11U   /*!< SECO reset */
+#define SC_PM_RESET_REASON_SECO        11U   /*!< Other SECO reset */
 #define SC_PM_RESET_REASON_SCFW_FAULT  12U   /*!< SCFW fault reset */
 #define SC_PM_RESET_REASON_V2X_DEBUG   13U   /*!< V2X debug switch */
 /** @} */

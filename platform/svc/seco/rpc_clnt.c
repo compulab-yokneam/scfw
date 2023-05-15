@@ -882,6 +882,34 @@ sc_err_t sc_seco_sab_msg(sc_ipc_t ipc, sc_faddr_t addr)
     return err;
 }
 
+/* IDL: E8 CAAM_TD_CONFIG(UI16 resource, IB allow, IB lock) #33 */
+sc_err_t sc_seco_caam_td_config(sc_ipc_t ipc, sc_rsrc_t resource,
+    sc_bool_t allow, sc_bool_t lock)
+{
+    sc_rpc_msg_t msg;
+    sc_err_t err;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 2U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
+    RPC_FUNC(&msg) = U8(SECO_FUNC_CAAM_TD_CONFIG);
+
+    /* Fill in send message */
+    RPC_U16(&msg, 0U) = U16(resource);
+    RPC_U8(&msg, 2U) = B2U8(allow);
+    RPC_U8(&msg, 3U) = B2U8(lock);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out result */
+    err = (sc_err_t) RPC_R8(&msg);
+
+    /* Return result */
+    return err;
+}
+
 /* IDL: E8 SECVIO_ENABLE() #25 */
 sc_err_t sc_seco_secvio_enable(sc_ipc_t ipc)
 {

@@ -160,6 +160,77 @@ typedef uint16_t seco_lifecycle_t;
  */
 typedef uint8_t seco_snvs_id_t;
 
+/*!
+ * This type is used to communicate SECO/V2X indication codes.
+ */
+typedef enum
+{
+    AHAB_ROM_PING_IND                   = 0x0A,
+    AHAB_FW_PING_IND                    = 0x1A,
+    AHAB_BAD_SIGNATURE_IND              = 0xF0,
+    AHAB_BAD_HASH_IND                   = 0xF1,
+    AHAB_INVALID_LIFECYCLE              = 0xF2,
+    AHAB_PERMISSION_DENIED_IND          = 0xF3,
+    AHAB_INVALID_MESSAGE_IND            = 0xF4,
+    AHAB_BAD_VALUE_IND                  = 0xF5,
+    AHAB_BAD_FUSE_ID_IND                = 0xF6,
+    AHAB_BAD_CONTAINER_IND              = 0xF7,
+    AHAB_BAD_VERSION_IND                = 0xF8,
+    AHAB_INVALID_KEY_IND                = 0xF9,
+    AHAB_BAD_KEY_HASH_IND               = 0xFA,
+    AHAB_NO_VALID_CONTAINER_IND         = 0xFB,
+    AHAB_BAD_CERTIFICATE_IND            = 0xFC,
+    AHAB_BAD_UID_IND                    = 0xFD,
+    AHAB_BAD_MONOTONIC_COUNTER_IND      = 0xFE,
+    AHAB_SECO_FATAL_FAILURE_IND         = 0xFF,
+    AHAB_MUST_SIGNED_IND                = 0xE0,
+    AHAB_NO_AUTHENTICATION_IND          = 0xEE,
+    AHAB_BAD_SRK_SET_IND                = 0xEF,
+    AHAB_OOM_FOR_BLOB_IND               = 0xA0,
+    AHAB_BID_COLLISION_IND              = 0xA1,
+    AHAB_NO_BID_MATCHING_IND            = 0xA2,
+    AHAB_UNKNOWN_BID_IND                = 0xA3,
+    AHAB_BAD_BLOB_IND                   = 0xA4,
+    AHAB_OOM_FOR_BLOB_EXPORT_IND        = 0xA5,
+    AHAB_UNALIGNED_PAYLOAD_IND          = 0xA6,
+    AHAB_WRONG_SIZE_IND                 = 0xA7,
+    AHAB_ENCRYPTION_FAILURE_IND         = 0xA8,
+    AHAB_DECRYPTION_FAILURE_IND         = 0xA9,
+    AHAB_OTP_PROGFAIL_IND               = 0xAA,
+    AHAB_OTP_LOCKED_IND                 = 0xAB,
+    AHAB_OTP_DED_IND                    = 0xAC,
+    AHAB_OTP_INVALID_IDX_IND            = 0xAD,
+    AHAB_ADM_NOT_READY_IND              = 0xAE,
+    AHAB_ADM_WRONG_LC_IND               = 0xAF,
+    AHAB_TIME_OUT_IND                   = 0xB0,
+    AHAB_BAD_PAYLOAD_IND                = 0xB1,
+    AHAB_HDCP_DISABLED_IND              = 0xB2,
+    AHAB_KMEK_GENERATION_FAIL_IND       = 0xB3,
+    AHAB_WRONG_ADDRESS_IND              = 0xB4,
+    AHAB_DMA_FAILURE_IND                = 0xB5,
+    AHAB_DISABLED_FEATURE_IND           = 0xB6,
+    AHAB_MUST_ATTEST_IND                = 0xB7,
+    AHAB_RNG_NOT_STARTED_IND            = 0xB8,
+    AHAB_CRC_ERROR                      = 0xB9,
+    AHAB_BLOB_GENERATION_FAILURE        = 0xBA,
+    AHAB_AUTH_SKIPPED_OR_FAILED_IND     = 0xBB,
+    AHAB_INCONSISTENT_PAR_IND           = 0xBC,
+    AHAB_RNG_INST_FAILURE_IND           = 0xBD,
+    AHAB_LOCKED_REG_IND                 = 0xBE,
+    AHAB_BAD_ID_IND                     = 0xBF,
+    AHAB_INVALID_OPERATION_IND          = 0xC0,
+    AHAB_NON_SECURE_STATE_IND           = 0xC1
+} seco_msg_ind_t;
+
+/*!
+ * This type is used to communicate SECO/V2X status codes.
+ */
+typedef enum
+{
+    AHAB_SUCCESS_IND                = 0x00,
+    AHAB_FAILURE_IND                = 0x29
+} seco_msg_status_t;
+
 /* Functions */
 
 /*!
@@ -177,6 +248,14 @@ typedef uint8_t seco_snvs_id_t;
 void SECO_Init(boot_phase_t phase);
 
 /*!
+ * This function sends a message to SECO to indicate it is ready
+ * to get interrupts.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_SCFW_Ready(void);
+
+/*!
  * This function configures the CAAM MP.
  *
  * @param[in]     master      Index of job ring / out 
@@ -192,6 +271,27 @@ void SECO_Init(boot_phase_t phase);
  */
 void SECO_CAAM_Config(uint16_t master, sc_bool_t lock, sc_rm_spa_t sa,
     sc_rm_did_t did, sc_rm_sid_t sid);
+
+/*!
+ * This function configures the CAAM MP.
+ *
+ * @param[in]     jr          index of job ring 
+ * @param[in]     allow       allow make trusted descriptor
+ * @param[in]     lock        lock 
+ *
+ * Called to configure the trusted descriptor feature for the
+ * CAAM job rings.
+ *
+ * For \a allow SC_TRUE = allow this JR to make trusted descriptors,
+ * SC_FALSE = disallows.
+ *
+ * For \a lock SC_TRUE = lock the allow state, SC_FALSE = do not lock.
+ * Once locked, it cannot be unlocked. Can be locked in the allow or
+ * disallow state!
+ *
+ * See the SRM and the SECO API Reference Guide for more info.
+ */
+void SECO_CAAM_Config_TD(uint16_t jr, sc_bool_t allow, sc_bool_t lock);
 
 /*!
  * This function clears the CAAM MP cache. It is called by the Power
@@ -662,7 +762,16 @@ uint8_t SECO_V2X_GetState(uint32_t *req_status, uint8_t *power_state);
  */
 void SECO_V2X_Power(uint8_t power_mode, uint8_t flags, sc_saddr_t *addr);
 
- /*!
+/*!
+ * This function obtains the V2X FW address.
+ *
+ * @param[out]    addr            pointer to return FW address
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_V2X_Get_FW_Addr(sc_saddr_t *addr);
+
+/*!
  * This function will recover the V2X firmware after a power off. If the flag is 
  * V2X_RECOVER_AUTH, SECO will send a V2X authenticate request to V2X using the
  * V2X container header from the last V2X authenticate request.
@@ -673,7 +782,7 @@ void SECO_V2X_Power(uint8_t power_mode, uint8_t flags, sc_saddr_t *addr);
  */
 void SECO_V2X_FW_Recovery(uint8_t flags);
 
- /*!
+/*!
  * This function will notify SECO that the V2X images used for the last V2X
  * authentication have been/will be move to a new location given in parameter.
  * If the request is successful SECO will use the new location of the images
@@ -684,6 +793,11 @@ void SECO_V2X_FW_Recovery(uint8_t flags);
  * See the SECO API Reference Guide for more info.
  */
 void SECO_V2X_Remap_FW(sc_saddr_t addr);
+
+/*!
+ * Interrupt handler for the SECO MU.
+ */
+void SECO_MU_IRQHandler(void);
 
 /** @} */
 
@@ -766,6 +880,35 @@ void SECO_DumpDebug(void);
  * @return Returns the error number.
  */
 uint32_t SECO_ErrNumber(void);
+
+/*!
+ * This function translates a SECO/V2X response word into the various
+ * response fields.
+ *
+ * @param[in]     resp           response word
+ * @param[out]    status         pointer to return the status
+ * @param[out]    ind            pointer to return the indication
+ * @param[out]    abort_line     pointer to return the abort line number
+ * @param[out]    abort_module   pointer to return the abort module
+ *
+ * See the SECO API Reference Guide for a description of these
+ * internal error codes.
+ */
+void SECO_Parse_Resp(uint32_t resp, seco_msg_status_t *status,
+    seco_msg_ind_t *ind, uint8_t *abort_line, uint8_t *abort_module);
+
+/*!
+ * This function translates a SECO/V2X indication code to an SCFW
+ * error code.
+ *
+ * @param[in]     ind         indication code
+ *
+ * See the SECO API Reference Guide for a description of these
+ * internal error codes.
+ *
+ * @return Returns the error number.
+ */
+sc_err_t SECO_Ind2Err(seco_msg_ind_t ind);
 
 /** @} */
 

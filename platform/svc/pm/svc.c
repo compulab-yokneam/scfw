@@ -118,6 +118,8 @@ typedef struct
 static void ss_cpu_stop_all(sc_rm_pt_t pt);
 static sc_err_t pm_reboot_cont(sc_rm_pt_t pt);
 static sc_err_t pm_part_off(sc_rm_pt_t pt, uint32_t flags);
+static sc_err_t check_power_mode_trans(sc_rsrc_t rsrc,
+    sc_pm_power_mode_t mode);
 
 /* Local Variables */
 
@@ -408,6 +410,9 @@ sc_err_t pm_set_resource_power_mode(sc_rsrc_t mu, sc_rsrc_t resource,
     /* Check to insure not disabling MU we are calling on */
     ASRT_ERR((mu != resource) || (mode > SC_PM_PW_MODE_STBY), SC_ERR_PARM);
 
+    /* Check if power mode allowed */
+    FUNC_ERR(check_power_mode_trans(resource, mode));
+
     /* Error? */
     if (err == SC_ERR_NONE)
     {
@@ -566,10 +571,12 @@ void pm_set_rsrc_power_mode(sc_rm_idx_t idx, sc_pm_power_mode_t mode)
 void pm_set_active_rsrc_power_mode(sc_rm_idx_t idx, sc_pm_power_mode_t mode)
 {
     /* Check availability */
-    if (rm_is_ridx_avail(idx) != SC_FALSE)
+    if ((rm_is_ridx_avail(idx) != SC_FALSE) &&
+        (check_power_mode_trans(rm_get_resource(idx), mode)
+        == SC_ERR_NONE))
     {
         sc_pm_power_mode_t from_mode;
-        
+
         from_mode = pm_rsrc_data[idx].rsrc_mode;
 
         if ((from_mode != SC_PM_PW_MODE_OFF) 
@@ -607,6 +614,9 @@ sc_err_t pm_force_resource_power_mode(sc_rsrc_t resource,
     /* Bounds check */
     BOUND_RSRC(resource, idx);
 
+    /* Check if power mode allowed */
+    FUNC_ERR(check_power_mode_trans(resource, mode));
+
     /* Check for error */
     if (err == SC_ERR_NONE)
     {
@@ -639,6 +649,9 @@ void pm_force_resource_power_mode_v(sc_rsrc_t resource,
 
     /* Bounds check */
     BOUND_RSRC(resource, idx);
+
+    /* Check if power mode allowed */
+    FUNC_ERR(check_power_mode_trans(resource, mode));
 
     if (err == SC_ERR_NONE)
     {
@@ -1085,6 +1098,12 @@ sc_err_t pm_set_clock_parent(sc_rm_pt_t caller_pt, sc_rsrc_t resource,
 
     /* Check ownership */
     ACCESS_ALLOWED(caller_pt, idx);
+
+    /* Workaround for ERR050812 */
+    if ((parent == XTAL) && (soc_rsrc_is_ap(resource) != SC_FALSE))
+    {
+        err = SC_ERR_PARM;
+    }
 
     if (err == SC_ERR_NONE)
     {
@@ -1911,6 +1930,26 @@ static sc_err_t pm_part_off(sc_rm_pt_t pt, uint32_t flags)
                     SC_PT_ALL);;
             }
         }
+    }
+
+    return err;
+}
+
+/*--------------------------------------------------------------------------*/
+/* Check if the requested power mode is okay                                */
+/*--------------------------------------------------------------------------*/
+static sc_err_t check_power_mode_trans(sc_rsrc_t rsrc,
+    sc_pm_power_mode_t mode)
+{
+    sc_err_t err = SC_ERR_NONE;
+
+    /*
+     * Workaround for ERR050812.
+     * Call SOC to check if AP is not allowed to enter LP
+     */
+    if ((mode == SC_PM_PW_MODE_LP) && (soc_rsrc_is_ap(rsrc) != SC_FALSE))
+    {
+        err = SC_ERR_PARM;
     }
 
     return err;

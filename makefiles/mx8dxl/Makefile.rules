@@ -108,7 +108,11 @@ memmap-$(LLC) : $(SRC)/config/$(CONFIG)/soc.h $(SRC)/devices/$(DEVICE)/memmap.tx
 export-$(LLC) : clean dxl $(TPROTOH) $(EOBJS)
 	$(AT)mkdir -p scfw_export_$(CONFIG)_$(LOWER_R)/bin
 	$(AT)cp -f doc/EULA.txt scfw_export_$(CONFIG)_$(LOWER_R)/COPYING
-	$(AT)cp -f doc/SCR-imx-scfw-porting-kit.txt scfw_export_$(CONFIG)_$(LOWER_R)
+	$(AT)cp -f doc/SCR-Header.txt scfw_export_$(CONFIG)_$(LOWER_R)/SCR-imx-scfw-porting-kit.txt
+	$(AT)cat doc/SCR-All.txt >> scfw_export_$(CONFIG)_$(LOWER_R)/SCR-imx-scfw-porting-kit.txt
+	$(AT)sed -i 's/#PACKAGE/scfw_export_$(CONFIG)_$(LOWER_R).tar.gz/g' scfw_export_$(CONFIG)_$(LOWER_R)/SCR-imx-scfw-porting-kit.txt
+	$(AT)sed -i 's/#TYPE/Binary and source code/g' scfw_export_$(CONFIG)_$(LOWER_R)/SCR-imx-scfw-porting-kit.txt
+	$(AT)sed -i 's/#DESC/System Controller firmware porting kit for i.MX8DXL/g' scfw_export_$(CONFIG)_$(LOWER_R)/SCR-imx-scfw-porting-kit.txt
 	$(AT)cp bin/dcd.sed scfw_export_$(CONFIG)_$(LOWER_R)/bin
 	$(AT)cp bin/retention.sed scfw_export_$(CONFIG)_$(LOWER_R)/bin
 	$(AT)cp bin/pkit_keep scfw_export_$(CONFIG)_$(LOWER_R)/bin
@@ -119,6 +123,7 @@ export-$(LLC) : clean dxl $(TPROTOH) $(EOBJS)
 	$(AT)rm -f scfw_export_$(CONFIG)_$(LOWER_R)/$(OUT)/scfw*.*
 	$(AT)xargs -a bin/pkit_keep -I % rm -rf scfw_export_$(CONFIG)_$(LOWER_R)/$(OUT)/%
 	$(AT)find scfw_export_$(CONFIG)_$(LOWER_R) -name "*.d" -type f -delete
+	$(AT)find platform -name "*LICENSE.txt" -type f -exec cp --parents -ft scfw_export_$(CONFIG)_$(LOWER_R) {} + 
 	$(AT)find platform -name "*.h" -type f -exec cp --parents -ft scfw_export_$(CONFIG)_$(LOWER_R) {} + 
 	$(AT)find platform -name "*.bom" -type f -exec cp --parents -ft scfw_export_$(CONFIG)_$(LOWER_R) {} + 
 	$(AT)find platform -name "*.ld" -type f -exec cp --parents -ft scfw_export_$(CONFIG)_$(LOWER_R) {} + 

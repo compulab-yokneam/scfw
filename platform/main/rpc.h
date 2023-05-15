@@ -56,7 +56,7 @@
  */
 /** @{ */
 #define SCFW_API_VERSION_MAJOR  1U
-#define SCFW_API_VERSION_MINOR  27U
+#define SCFW_API_VERSION_MINOR  29U
 /** @} */
 
 /*! RPC version */

@@ -615,6 +615,39 @@ sc_err_t seco_sab_msg(sc_rm_pt_t caller_pt, sc_faddr_t addr)
 }
 
 /*--------------------------------------------------------------------------*/
+/* Configure a CAAM job ring to allow it to make trusted descriptors        */
+/*--------------------------------------------------------------------------*/
+sc_err_t seco_caam_td_config(sc_rm_pt_t caller_pt, sc_rsrc_t resource,
+    sc_bool_t allow, sc_bool_t lock)
+{
+    #ifdef HAS_SECO
+        sc_err_t err = SC_ERR_NONE;
+
+        /* Bounds check */
+        BOUND_PT(caller_pt);
+
+        /* Check parameters */
+        ASRT_ERR((resource >= SC_R_CAAM_JR1) 
+            && (resource <= SC_R_CAAM_JR3), SC_ERR_PARM);
+
+        /* Check access rights */
+        OWNED(resource);
+
+        /* Check for error? */
+        if (err == SC_ERR_NONE)
+        {
+            SECO_CAAM_Config_TD(resource - SC_R_CAAM_JR1 + 1U,
+                allow, lock);
+            err = seco_err;
+        }
+
+        return err;
+    #else
+        return SC_ERR_UNAVAILABLE;
+    #endif
+}
+
+/*--------------------------------------------------------------------------*/
 /* Enable security violation and tamper interrupts                          */
 /*--------------------------------------------------------------------------*/
 sc_err_t seco_secvio_enable(sc_rm_pt_t caller_pt)

@@ -468,7 +468,7 @@ sc_err_t sc_rm_set_subsys_rsrc_movable(sc_ipc_t ipc, sc_rsrc_t resource,
  *
  * Return errors:
  * - SC_ERR_NOACCESS if caller's partition is restricted,
- * - SC_PARM if arguments out of range or invalid,
+ * - SC_PARM if arguments out of range or invalid (e.g. resource not a master),
  * - SC_ERR_NOACCESS if caller's partition is not a parent of the resource owner,
  * - SC_ERR_LOCKED if the owning partition is locked
  *
@@ -496,7 +496,8 @@ sc_err_t sc_rm_set_master_attributes(sc_ipc_t ipc, sc_rsrc_t resource,
  *
  * Return errors:
  * - SC_ERR_NOACCESS if caller's partition is restricted,
- * - SC_PARM if arguments out of range or invalid,
+ * - SC_PARM if arguments out of range or invalid (e.g. resource not a master,
+     SID out of range),
  * - SC_ERR_NOACCESS if caller's partition is not the resource owner or parent
  *   of the owner,
  * - SC_ERR_LOCKED if the owning partition is locked
@@ -520,7 +521,7 @@ sc_err_t sc_rm_set_master_sid(sc_ipc_t ipc, sc_rsrc_t resource,
  * @return Returns an error code (SC_ERR_NONE = success).
  *
  * Return errors:
- * - SC_PARM if arguments out of range or invalid,
+ * - SC_PARM if arguments out of range or invalid (e.g. resource not a peripheral),
  * - SC_ERR_NOACCESS if caller's partition is not the resource owner or parent
  *   of the owner,
  * - SC_ERR_LOCKED if the owning partition is locked

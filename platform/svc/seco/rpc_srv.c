@@ -588,6 +588,24 @@ void seco_dispatch(sc_rm_pt_t caller_pt, sc_rsrc_t mu, sc_rpc_msg_t *msg)
                 RPC_SIZE(msg) = 1U;
                 break;
             }
+        /* Dispatch caam_td_config() */
+        case SECO_FUNC_CAAM_TD_CONFIG :
+            {
+                /* Declare return and parameters */
+                sc_err_t result;
+                sc_rsrc_t resource = ((sc_rsrc_t) RPC_U16(msg, 0U));
+                sc_bool_t allow = U2B(RPC_U8(msg, 2U));
+                sc_bool_t lock = U2B(RPC_U8(msg, 3U));
+
+                /* Call function */
+                err = seco_caam_td_config(caller_pt, resource, allow, lock);
+                result = err;
+
+                /* Copy in return parameters */
+                RPC_R8(msg) = U8(result);
+                RPC_SIZE(msg) = 1U;
+                break;
+            }
         /* Dispatch secvio_enable() */
         case SECO_FUNC_SECVIO_ENABLE :
             {

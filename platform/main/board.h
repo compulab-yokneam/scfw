@@ -64,8 +64,10 @@
 #define BOARD_PARM_RTN_DPLL_SS_1_5         15U   /*!< 1.5% spread of PCIE DPLL frequency. */
 #define BOARD_PARM_RTN_DPLL_SS_2           20U   /*!< 2% spread of PCIE DPLL frequency. */
 
-#define BOARD_PARM_RTN_VDD_MEMC_NOM         0U   /*!< MEMC Nominal */
-#define BOARD_PARM_RTN_VDD_MEMC_OD          1U   /*!< MEMC Overdrive */
+/* Used to specify VDD_MEMC on the board. Must match the board design.
+   See the Porting Guide and i.MX8DXL Data Sheet. */
+#define BOARD_PARM_RTN_VDD_MEMC_NOM         0U   /*!< VDD_MEMC nominal - 1.0v */
+#define BOARD_PARM_RTN_VDD_MEMC_OD          1U   /*!< VDD_MEMC overdrive - 1.1v */
 
 #define BOARD_PARM_KS1_RETENTION_DISABLE    0U   /*!< Disable retention during KS1 */
 #define BOARD_PARM_KS1_RETENTION_ENABLE     1U   /*!< Enable retention during KS1 */
@@ -125,8 +127,19 @@ typedef enum
     BOARD_BFAULT_BAD_CONTAINER  = 5,    /*!< Bad boot container, invalid partitions/images */
     BOARD_BFAULT_BRD_FAIL       = 6,    /*!< Board failure - RM or PMIC, etc. */
     BOARD_BFAULT_TEST_FAIL      = 7,    /*!< Unit test failure, exit */
-    BOARD_BFAULT_DDR_INIT_FAIL  = 8     /*!< board_init_ddr() returned an error */
+    BOARD_BFAULT_DDR_INIT_FAIL  = 8,    /*!< board_init_ddr() returned an error */
+    BOARD_BFAULT_SEC_FAIL       = 9     /*!< SECO/V2X failure */
 } sc_bfault_t;
+
+/*!
+ * Security fault types.
+ */
+typedef enum
+{
+    BOARD_SFAULT_SECO_ABORT     = 0,    /*!< SECO abort */
+    BOARD_SFAULT_V2X_ABORT      = 1,    /*!< V2X abort */
+    BOARD_SFAULT_V2X_SER_ERR    = 2     /*!< V2X serious error */
+} sc_sfault_t;
 
 /*!
  * Board reboot timeout actions.
@@ -396,6 +409,10 @@ sc_bool_t board_early_cpu(sc_rsrc_t cpu);
  * Function to override QoS configuration.
  *
  * @param[in]     ss            subsystem with QoS controls
+ *
+ * This function is to allow NXP support or professional services to
+ * perform such optimization for a customer or application. It is not
+ * intended for direct customer use.
  */
 void board_qos_config(sc_sub_t ss);
 
@@ -628,6 +645,22 @@ void board_panic(sc_dsc_t dsc);
  */
 void board_fault(sc_bool_t restarted, sc_bfault_t reason,
     sc_rm_pt_t pt);
+
+/*!
+ * This function is called when an abort or serious error is
+ * reported by SECO or V2X.
+ *
+ * @param[in]     abort_module  module of abort
+ * @param[in]     abort_line    line number of abort
+ * @param[in]     reason        reason for fault
+ *
+ * Note this function would normally request a board reset. For
+ * debug builds it is common to display a message.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
+    sc_sfault_t reason);
 
 /*!
  * This function is called when a security violation is reported by

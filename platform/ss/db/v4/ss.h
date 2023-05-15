@@ -71,7 +71,7 @@ void ss_v2x_enable(void);
 void ss_v2x_set_state(ss_v2x_state_t state);
 ss_v2x_state_t ss_v2x_get_state(void);
 sc_bool_t ss_v2x_clock_run(sc_bool_t enable);
-void ss_v2x_auth_finish(void);
+void ss_v2x_auth_finish(sc_bool_t fw_load, sc_bool_t clr_irq);
 
 /* External variables */
 

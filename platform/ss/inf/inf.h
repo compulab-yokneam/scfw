@@ -504,7 +504,7 @@ typedef sc_bool_t (*ss_dsc_l2irq_handler)(sc_dsc_t dsc, uint32_t irqIndex);
  * @param[in]     ss          subsystem to initialize
  * @param[in]     api_phase   flag indicating phase
  *
- * There are two phases to subsystem initialization. The fist phase is
+ * There are two phases to subsystem initialization.  The fist phase is
  * the API phase (\a api_phase = SC_TRUE) and initializes all of the subsystem
  * interface data structures. The second phase is the HW phase and this
  * initializes the SS hardware. Both are called from main() only.

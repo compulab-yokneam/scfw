@@ -59,6 +59,7 @@
 #include "main/soc.h"
 #include "board/pmic.h"
 #include "all_svc.h"
+#include "all_ss.h"
 #include "drivers/lpi2c/fsl_lpi2c.h"
 #include "drivers/pmic/fsl_pmic.h"
 #include "drivers/pmic/pf8100/fsl_pf8100.h"
@@ -158,6 +159,12 @@
     #define DEBUG_BAUD          115200U
 #endif
 
+/*!
+ * Define to force power transition of subsytems as workaround for KS1
+ * excess power errata
+ */
+#define BOARD_FORCE_ALL_SS_PWR_TRANS
+
 /* Local Types */
 
 /* Local Functions */
@@ -243,6 +250,32 @@ void board_init(boot_phase_t phase)
 
         /* Init PMIC if not already done */
         pmic_init();
+
+#ifdef BOARD_FORCE_ALL_SS_PWR_TRANS
+        uint32_t power_ctrl;
+        /* Check if ADMA subsytem has been powered up at least once */
+        power_ctrl = DSC_ADMA->POWER_CTRL[PD_SS].RW;
+        if (((power_ctrl & DSC_POWER_CTRL_PFET_LF_EN_MASK) == 0U) &&
+            ((power_ctrl & DSC_PWRCTRL_MAIN_RFF_MASK) == 0U))
+        {
+            /* Transition ADMA resource to ensure SS powered once prior to KS1 */
+            pm_force_resource_power_mode_v(SC_R_IRQSTR_SCU2, SC_PM_PW_MODE_ON);
+            pm_force_resource_power_mode_v(SC_R_IRQSTR_SCU2, SC_PM_PW_MODE_OFF);
+
+            /* Evaluate HMP power mode after ADMA transition */
+            soc_update_hmp_sys_power_mode();
+        }
+
+        /* Check if LSIO subsytem has been powered up at least once */
+        power_ctrl = DSC_LSIO->POWER_CTRL[PD_SS].RW;
+        if (((power_ctrl & DSC_POWER_CTRL_PFET_LF_EN_MASK) == 0U) &&
+            ((power_ctrl & DSC_PWRCTRL_MAIN_RFF_MASK) == 0U))
+        {
+            /* Transition LSIO resource to ensure SS powered once prior to KS1 */
+            pm_force_resource_power_mode_v(SC_R_MU_0A, SC_PM_PW_MODE_ON);
+            pm_force_resource_power_mode_v(SC_R_MU_0A, SC_PM_PW_MODE_OFF);
+        }
+#endif
     }
     else if (phase == BOOT_PHASE_TEST_INIT)
     {
@@ -370,6 +403,8 @@ board_parm_rtn_t board_parameter(board_parm_t parm)
 #ifndef EMUL
         /* VDD_MEMC voltage */
         case BOARD_PARM_VDD_MEMC:
+            /* This parameter MUST match the VDD_MEMC voltage on the board;
+               see the Porting Guide for more information */
             rtn = BOARD_PARM_RTN_VDD_MEMC_OD;
             break;
 #endif
@@ -424,6 +459,10 @@ sc_bool_t board_rsrc_avail(sc_rsrc_t rsrc)
 /*--------------------------------------------------------------------------*/
 void board_qos_config(sc_sub_t ss)
 {
+    /* This function is to allow NXP support or professional services to
+     * perform such optimization for a customer or application. It is not
+     * intended for direct customer use.
+     */
 }
 
 /*--------------------------------------------------------------------------*/
@@ -686,9 +725,9 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
         BRD_ERR(rm_memreg_frag(pt_boot, &mr_temp,
             U64(fw_start), U64(fw_end)));
         BRD_ERR(rm_assign_memreg(pt_boot, SECO_PT, mr_temp));
-        /*! @todo remove when V2X using IDs correctly */
+        /* Not required on DXL B0 */
         BRD_ERR(rm_set_memreg_permissions(SECO_PT, mr_temp,
-            SC_RM_PT_ALL, SC_RM_PERM_FULL));
+            SECO_PT, SC_RM_PERM_FULL));
     }
 
     /* Name default partitions */
@@ -1146,6 +1185,35 @@ void board_fault(sc_bool_t restarted, sc_bfault_t reason,
             HALT;
         }
         /* Issue was before restart so just return */
+    #endif
+}
+
+/*--------------------------------------------------------------------------*/
+/* Handle SECO/V2X FW fault                                                 */
+/*--------------------------------------------------------------------------*/
+void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
+    sc_sfault_t reason)
+{
+    #ifdef DEBUG
+        if (reason == BOARD_SFAULT_SECO_ABORT)
+        {
+            error_print("SECO Abort (mod %d, ln %d)\n", abort_module,
+                abort_line);
+        }
+        else if (reason == BOARD_SFAULT_V2X_ABORT)
+        {
+            error_print("V2X Abort (mod %d, ln %d)\n", abort_module,
+                abort_line);
+        }
+        else
+        {
+            error_print("V2X Serious Err\n");
+        }
+    #else
+        if (reason != BOARD_SFAULT_V2X_SER_ERR)
+        {
+            board_fault(SC_FALSE, BOARD_BFAULT_SEC_FAIL, SECO_PT);
+        }
     #endif
 }
 

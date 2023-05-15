@@ -14,7 +14,9 @@ ifeq ($(MAKECMDGOALS), clean-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -29,7 +31,9 @@ ifeq ($(MAKECMDGOALS), $(LLC)e)
 	TEST_B := evk
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -46,7 +50,9 @@ ifeq ($(MAKECMDGOALS), gcov-$(LLC))
 	SIMUCFG := serial
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -61,7 +67,9 @@ ifeq ($(MAKECMDGOALS), $(LLC)m4)
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -75,7 +83,9 @@ ifeq ($(MAKECMDGOALS), dox-api-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -90,7 +100,9 @@ ifeq ($(MAKECMDGOALS), dox-hw-$(LLC))
 	EXP := hw_
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -104,7 +116,9 @@ ifeq ($(MAKECMDGOALS), dox-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -120,7 +134,9 @@ ifeq ($(MAKECMDGOALS), obj-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -134,7 +150,9 @@ ifeq ($(MAKECMDGOALS), cppcheck-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -148,7 +166,9 @@ ifeq ($(MAKECMDGOALS), cppcheck-dump-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -162,7 +182,9 @@ ifeq ($(MAKECMDGOALS), info-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -176,7 +198,9 @@ ifeq ($(MAKECMDGOALS), memmap-$(LLC))
 	UC := $(LUC)
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif
@@ -196,7 +220,9 @@ ifeq ($(MAKECMDGOALS), export-$(LLC))
 	TEST_B := evk
     ifneq ($(UPPER_R),A0)
     ifneq ($(UPPER_R),A1)
+    ifneq ($(UPPER_R),B0)
     $(error Invalid revision)
+    endif
     endif
     endif
 endif

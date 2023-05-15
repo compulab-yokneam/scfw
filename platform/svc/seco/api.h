@@ -148,6 +148,10 @@ sc_err_t sc_seco_image_load(sc_ipc_t ipc, sc_faddr_t addr_src,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * This is used to authenticate a SECO image or issue a security
  * command. \a addr often points to an container. It is also
  * just data (or even unused) for some commands.
@@ -189,9 +193,13 @@ sc_err_t sc_seco_authenticate(sc_ipc_t ipc,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * This supports all the commands found in sc_seco_authenticate(). Those
  * commands should set both masks to 0 (except SC_SECO_VERIFY_IMAGE).
-
+ *
  * New commands are as follows:
  *
  * - cmd=SC_SECO_VERIFY_IMAGE, addr unused, mask1=image mask, mask2 unused (sends AHAB_VERIFY_IMAGE_REQ to SECO)
@@ -228,6 +236,9 @@ sc_err_t sc_seco_enh_authenticate(sc_ipc_t ipc,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Note if any previous API call resulted in an error, calls to this function will fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * This function is used for going from Open to NXP Closed to OEM Closed.
  * Note \a change is NOT the new desired lifecycle. It is a lifecycle
  * transition as documented in the <em>SECO API Reference Guide</em>.
@@ -255,6 +266,10 @@ sc_err_t sc_seco_forward_lifecycle(sc_ipc_t ipc, uint32_t change);
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  *
  * Note \a addr must be a pointer to a signed message block.
  *
@@ -285,6 +300,9 @@ sc_err_t sc_seco_return_lifecycle(sc_ipc_t ipc, sc_faddr_t addr);
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ * 
+ * Note if any previous API call resulted in an error, calls to this function will fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  */
 /* IDL: E8 COMMIT(UIO32 info) #5 */
 sc_err_t sc_seco_commit(sc_ipc_t ipc, uint32_t *info);
@@ -336,6 +354,10 @@ sc_err_t sc_seco_attest_mode(sc_ipc_t ipc, uint32_t mode);
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * This is used to ask SECO to perform an attestation. The result depends
  * on the attestation mode. After this call, the signature can be
  * requested or a verify can be requested.
@@ -367,6 +389,10 @@ sc_err_t sc_seco_attest(sc_ipc_t ipc, uint64_t nonce);
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * See the <em>SECO API Reference Guide</em> for more info.
  */
 /* IDL: E8 GET_ATTEST_PKEY(UI64 addr) #8 */
@@ -394,6 +420,10 @@ sc_err_t sc_seco_get_attest_pkey(sc_ipc_t ipc, sc_faddr_t addr);
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * See the <em>SECO API Reference Guide</em> for more info.
  */
 /* IDL: E8 GET_ATTEST_SIGN(UI64 addr) #9 */
@@ -419,6 +449,10 @@ sc_err_t sc_seco_get_attest_sign(sc_ipc_t ipc, sc_faddr_t addr);
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  *
  * See the <em>SECO API Reference Guide</em> for more info.
  */
@@ -450,6 +484,10 @@ sc_err_t sc_seco_attest_verify(sc_ipc_t ipc, sc_faddr_t addr);
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * This function is used to encapsulate sensitive keys in a specific structure
  * called a blob, which provides both confidentiality and integrity protection.
  *
@@ -474,6 +512,10 @@ sc_err_t sc_seco_gen_key_blob(sc_ipc_t ipc, uint32_t id,
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  *
  * This function is used to install private cryptographic keys encapsulated
  * in a blob previously generated by SECO. The controller can be either the
@@ -509,6 +551,10 @@ sc_err_t sc_seco_load_key(sc_ipc_t ipc, uint32_t id,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * This function is supported only in OEM-closed lifecycle. It generates
  * the mfg public key and stores it in a specific location in the secure
  * memory.
@@ -536,6 +582,10 @@ sc_err_t sc_seco_get_mp_key(sc_ipc_t ipc, sc_faddr_t dst_addr,
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  *
  * This function is supported only in OEM-closed lifecycle. It updates the
  * content of the MPMR (Manufacturing Protection Message register of 256
@@ -565,6 +615,10 @@ sc_err_t sc_seco_update_mpmr(sc_ipc_t ipc, sc_faddr_t addr,
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  *
  * This function is used to generate an ECDSA signature for an input-data
  * message and to store it in a specific location in the secure memory. It
@@ -650,6 +704,10 @@ sc_err_t sc_seco_chip_info(sc_ipc_t ipc, uint16_t *lc,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * Note \a addr must be a pointer to a signed message block.
  *
  * See the <em>SECO API Reference Guide</em> for more info.
@@ -700,6 +758,10 @@ sc_err_t sc_seco_get_event(sc_ipc_t ipc, uint8_t idx,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * Note \a addr must be a pointer to a signed message block.
  *
  * See the <em>SECO API Reference Guide</em> for more info.
@@ -720,6 +782,10 @@ sc_err_t sc_seco_fuse_write(sc_ipc_t ipc, sc_faddr_t addr);
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  *
  * Note \a addr must be a pointer to a signed message block.
  *
@@ -906,12 +972,47 @@ sc_err_t sc_seco_start_rng(sc_ipc_t ipc, sc_seco_rng_stat_t *status);
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
  *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
+ *
  * Note \a addr must be a pointer to a signed message block.
  *
  * See the <em>SECO API Reference Guide</em> for more info.
  */
 /* IDL: E8 SAB_MSG(UI64 addr) #23 */
 sc_err_t sc_seco_sab_msg(sc_ipc_t ipc, sc_faddr_t addr);
+
+/*!
+ * This function configures a CAAM job ring to allow it to make
+ * trusted descriptors.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[in]     resource    resource of job ring to configure
+ * @param[in]     allow       allow make trusted descriptor
+ * @param[in]     lock        lock 
+ *
+ * For \a allow SC_TRUE = allow this JR to make trusted descriptors,
+ * SC_FALSE = disallows.
+ *
+ * For \a lock SC_TRUE = lock the allow state, SC_FALSE = do not lock.
+ * Once locked, it cannot be unlocked. Can be locked in the allow or
+ * disallow state!
+ *
+ * @return Returns and error code (SC_ERR_NONE = success).
+ *
+ * Return errors codes:
+ * - SC_ERR_UNAVAILABLE if SECO not available,
+ * - SC_ERR_LOCKED if already locked,
+ * - SC_ERR_IPC if SECO response has bad header tag or size,
+ * - SC_ERR_VERSION if SECO response has bad version,
+ * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * See the <em>SRM</em> and <em>SECO API Reference Guide</em> for more info.
+ */
+/* IDL: E8 CAAM_TD_CONFIG(UI16 resource, IB allow, IB lock) #33 */
+sc_err_t sc_seco_caam_td_config(sc_ipc_t ipc, sc_rsrc_t resource,
+    sc_bool_t allow, sc_bool_t lock);
 
 /*!
  * This function is used to enable security violation and tamper interrupts.
@@ -985,6 +1086,10 @@ sc_err_t sc_seco_secvio_config(sc_ipc_t ipc, uint8_t id, uint8_t access,
  * - SC_ERR_IPC if SECO response has bad header tag or size,
  * - SC_ERR_VERSION if SECO response has bad version,
  * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Error responses will cause subsequent calls to sc_seco_commit()
+ * and sc_seco_forward_lifecycle() to also fail.
+ * See the [Security Service Detailed Description](\ref seco_err) section for more info.
  *
  * See AHAB_MANAGE_SNVS_DGO_REQ in the <em>SECO API Reference Guide</em>
  * for more info.

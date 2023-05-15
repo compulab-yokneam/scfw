@@ -310,7 +310,7 @@ typedef struct
 typedef struct
 {
     const sc_rsrc_t isi_rsrc;                   /*!< ISI channel used for sync */
-    ISI_Type * const isi_regs;                  /*!< ISI peripheral registers */ 
+    ISI_Type * const isi_regs;                  /*!< ISI peripheral registers */
     uint32_t timeout_usec;                      /*!< Sync search timeout */
 } soc_dqs2dq_sync_info_t;
 #endif
@@ -442,7 +442,7 @@ extern uint32_t soc_max_ap2_freq;
 #endif
 
 #if (HAS_SS_GPU_0 || HAS_SS_GPU_1) && !defined(NO_GPU_CLKS)
-/*! 
+/*!
  * Global variable to hold the GPU clock frequency and voltage for the
  * various operating points.
  */
@@ -671,6 +671,17 @@ void soc_get_max_freq_fuse(void);
  */
 sc_bool_t soc_pd_switchable(sc_dsc_t dsc, uint32_t pd);
 
+#ifdef SELECTIVE_SRPG_DISCARD
+/*!
+ * This function selectively discards the SRPG contents
+ * for a pd.
+ *
+ *@param[in]      dsc            DSC to affect
+ *@param[in]      pd             pd to affect
+ */
+void soc_pd_retention_discard(sc_dsc_t dsc, uint32_t pd);
+#endif
+
 /*!
  * This function checks if the given power domain of the given
  * dsc supports retention.
@@ -703,7 +714,7 @@ sc_bool_t soc_ss_has_bias(sc_sub_t ss);
 dsc_ai_type_t soc_ss_ai_type(sc_sub_t ss);
 
 /*!
- * Return the type of memory used in the given PD of 
+ * Return the type of memory used in the given PD of
  * the DSC.
  *
  *@param[in]      dsc            DSC to affect
@@ -714,7 +725,7 @@ dsc_ai_type_t soc_ss_ai_type(sc_sub_t ss);
 uint32_t soc_mem_type(sc_dsc_t dsc, uint32_t pd);
 
 /*!
- * This function returns the uniquely defined memory power plane 
+ * This function returns the uniquely defined memory power plane
  * for the given dsc id
  *
  * @param[in]     dsc_id          DSC to check
@@ -962,9 +973,9 @@ sc_bool_t soc_bias_enabled(sc_sub_t ss);
 
 
 /*!
- * Check if the new PLL rate is below the max freq vd-detect in the SS 
+ * Check if the new PLL rate is below the max freq vd-detect in the SS
  * can support.
- * 
+ *
  * @param[in]    dsc        DSC of subsystem to affect
  * @param[in]    rate       New pll rate
  *
@@ -1071,11 +1082,8 @@ sc_err_t soc_aux_enable_fw_load(uint8_t aux_idx, sc_faddr_t fw_addr);
  * core firmware image.
  *
  * @param[in]   aux_idx     Auxiliary core index
- * @param[in]   fw_addr     Address of FW image
- *
- * @return      SC_ERR_NONE if successful.
  */
-sc_err_t soc_aux_disable_fw_load(uint8_t aux_idx);
+void soc_aux_disable_fw_load(uint8_t aux_idx);
 
 /*!
  * This function checks if auxiliary core firmware load is in progress.
@@ -1122,7 +1130,7 @@ sc_err_t soc_init_ddr(sc_bool_t early);
 void soc_self_refresh_power_down_clk_disable_entry(void);
 
 /*!
- * This function enables DDR clocks and exits the DDR from SRPD (self-refresh 
+ * This function enables DDR clocks and exits the DDR from SRPD (self-refresh
  * power down).
  */
 void soc_refresh_power_down_clk_disable_exit(void);
@@ -1171,7 +1179,7 @@ void soc_ddr_dqs2dq_periodic(void);
 void soc_ddr_dqs2dq_config(soc_dqs2dq_sync_info_t *dqs2dq_sync_info);
 
 /*!
- * This function sychronizes LPDDR4 DQS2DQ periodic training to 
+ * This function sychronizes LPDDR4 DQS2DQ periodic training to
  * DDR traffic events (i.e. ISI frame completion).
  */
 void soc_ddr_dqs2dq_sync(void);
@@ -1245,7 +1253,7 @@ soc_dbgapb_cluster_info_t *soc_dbgapb_get_indexed_cluster_info(uint8_t idx);
 soc_dbgapb_cpu_info_t *soc_dbgapb_get_cpu_info(sc_rsrc_t cpu_rsrc);
 
 sc_bool_t soc_dbgapb_halt(void);
-sc_bool_t soc_dbgapb_get_reg(sc_rsrc_t cpu_rsrc, uint8_t reg_idx, 
+sc_bool_t soc_dbgapb_get_reg(sc_rsrc_t cpu_rsrc, uint8_t reg_idx,
     uint32_t *reg_upper, uint32_t *reg_lower);
 sc_bool_t soc_dbgapb_get_L1line(sc_rsrc_t cpu_rsrc, sc_bool_t dcache,
     uint8_t way, uint16_t set,uint32_t *tag_upper,uint32_t *tag_lower,
@@ -1265,6 +1273,25 @@ void soc_rc200_tune(sc_dsc_t dsc, uint32_t freq_mhz);
  * @param[in]   cl_tune   new capacitor value
  */
 void soc_XtalCL_Tune(uint32_t cl_tune);
+
+/*!
+ * Check if a resource is an AP (workaround for ERR050812)
+ *
+ * @param[in]   rsrc        resource to check
+ *
+ * @return Returns SC_TRUE if the resource is an AP.
+ */
+sc_bool_t soc_rsrc_is_ap(sc_rsrc_t rsrc);
+
+/*!
+ * Check if a DSC has a timestamp (workaround for ERR050812)
+ *
+ * @param[in]   dsc         DSC to check
+ * @param[in]   clk_index   pointer to return clock index
+ *
+ * @return Returns SC_TRUE if has a timestamp.
+ */
+sc_bool_t soc_ss_has_timestamp(sc_dsc_t dsc, ss_clock_t *clk_index);
 
 #endif /* SC_SOC_API_H */
 

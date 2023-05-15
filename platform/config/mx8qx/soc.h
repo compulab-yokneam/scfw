@@ -405,6 +405,9 @@ typedef uint32_t sc_db_connect_t;
 /*! Define for DB clock gating issue. */
 #define TKT309042_WORKAROUND
 
+/*! Define to selectively discard SRPG contents */
+#define SELECTIVE_SRPG_DISCARD
+
 /*! Has 28FDSOI in SCFW API */
 #define API_HAS_28FDSOI
 
@@ -433,7 +436,7 @@ typedef uint32_t sc_db_connect_t;
 #define HAS_SECO_FW
 
 /*! Define for FW version */
-#define SECO_FW_VERSION ((3UL << 16) | (7UL << 4) | 4UL)
+#define SECO_FW_VERSION ((3UL << 16) | (8UL << 4) | 1UL)
 
 /*! Define to use MIPI DSI trim */
 #define HAS_DSI_VOH_TRIM

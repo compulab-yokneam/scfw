@@ -126,6 +126,16 @@ void board_stdio(void);
 void board_wdog_disable(sc_bool_t lp);
 
 /*!
+ * Shim for soc_ddr_dqs2dq_init()
+ */
+void board_ddr_dqs2dq_init(void);
+
+/*!
+ * Shim for soc_ddr_dqs2dq_sync()
+ */
+void board_ddr_dqs2dq_sync(void);
+
+/*!
  * Conditional printf
  */
 void board_printf(const char *fmt, ...);

@@ -58,6 +58,9 @@
 /*! Define used to create subsystem function prototypes */
 #define SS_FUNC_PROTO_CONN \
     void ss_init_conn(sc_sub_t ss, sc_bool_t api_phase); \
+    sc_err_t ss_set_clock_parent_conn(sc_sub_t ss, ss_idx_t ss_idx, \
+        ss_ridx_t rsrc_idx, sc_pm_clk_t clk, sc_pm_clk_parent_t \
+        new_parent); \
     sc_err_t ss_set_control_conn(sc_sub_t ss, ss_idx_t ss_idx, ss_ridx_t \
         rsrc_idx, uint32_t ctrl, uint32_t val); \
     void ss_updown_conn(sc_sub_t ss, sc_bool_t up); \
@@ -83,7 +86,7 @@
         ss_get_clock_rate_base, \
         ss_clock_enable_base, \
         ss_force_clock_enable_base, \
-        ss_set_clock_parent_base, \
+        ss_set_clock_parent_conn, \
         ss_get_clock_parent_base, \
         ss_is_rsrc_accessible_base, \
         ss_mu_irq_base, \

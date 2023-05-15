@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2021 NXP
+**     Copyright 2017-2020 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -39,13 +39,15 @@
  *
  * File containing the implementation of the MX8QX MEK board.
  *
- * @addtogroup MX8QX_MEK_BRD (BRD) MX8QX MEK Board
+ * @addtogroup MX8QX_MEK_BRD BRD: MX8QX MEK Board
  *
  * Module for MX8QX MEK board access.
  *
  * @{
  */
 /*==========================================================================*/
+
+/* This port meets SRS requirement PRD_00110 */
 
 /* Includes */
 
@@ -57,6 +59,7 @@
 #include "main/soc.h"
 #include "board/pmic.h"
 #include "all_svc.h"
+#include "all_ss.h"
 #include "drivers/lpi2c/fsl_lpi2c.h"
 #include "drivers/pmic/fsl_pmic.h"
 #include "drivers/pmic/pf8100/fsl_pf8100.h"
@@ -109,9 +112,13 @@
 #define BRD_R_BOARD_R5          8U
 #define BRD_R_BOARD_R6          9U
 #define BRD_R_BOARD_R7          10U      /*!< Test */
-/*@}*/
+/** @} */
 
-#if DEBUG_UART == 0
+#if DEBUG_UART == 3
+    /*! Use debugger terminal emulation */
+    #define DEBUG_TERM_EMUL
+#endif
+#if DEBUG_UART == 2
     /*! Use alternate debug UART */
     #define ALT_DEBUG_SCU_UART
 #endif
@@ -142,6 +149,12 @@
     /*! Configure debug baud rate */
     #define DEBUG_BAUD          115200U
 #endif
+
+/*!
+ * Define to force power transition of subsytems as workaround for KS1
+ * excess power errata
+ */
+#define BOARD_FORCE_ALL_SS_PWR_TRANS
 
 /* Local Types */
 
@@ -226,11 +239,31 @@ void board_init(boot_phase_t phase)
 
     if (phase == BOOT_PHASE_FINAL_INIT)
     {
-        /* Configure SNVS button for faling    edge */
-        SNVS_ConfigButton(SNVS_DRV_BTN_CONFIG_FALLINGEDGE, SC_TRUE);
+        /* Configure SNVS button for rising edge */
+        SNVS_ConfigButton(SNVS_DRV_BTN_CONFIG_RISINGEDGE, SC_TRUE);
 
         /* Init PMIC if not already done */
         pmic_init();
+
+#ifdef BOARD_FORCE_ALL_SS_PWR_TRANS
+        uint32_t power_ctrl;
+        /* Check if ADMA subsytem has been powered up at least once */
+        power_ctrl = DSC_ADMA->POWER_CTRL[PD_SS].RW;
+        if (((power_ctrl & DSC_POWER_CTRL_PFET_LF_EN_MASK) == 0U) &&
+            ((power_ctrl & DSC_PWRCTRL_MAIN_RFF_MASK) == 0U))
+        {
+            /* Transition ADMA resource to ensure SS powered once prior to KS1 */
+            pm_force_resource_power_mode_v(SC_R_IRQSTR_SCU2, SC_PM_PW_MODE_ON);
+            pm_force_resource_power_mode_v(SC_R_IRQSTR_SCU2, SC_PM_PW_MODE_OFF);
+
+            /* Evaluate HMP power mode after ADMA transition */
+            soc_update_hmp_sys_power_mode();
+        }
+
+        /* LSIO transitioned during base board reset via SC_R_GPIO_1.  No need
+         * to force transition.
+         */
+#endif
     }
     else if (phase == BOOT_PHASE_EARLY_INIT)
     {
@@ -244,11 +277,18 @@ void board_init(boot_phase_t phase)
         pad_force_mux(SC_P_SPI2_SDO, 4, SC_PAD_CONFIG_NORMAL,
             SC_PAD_ISO_OFF);
 
-        /* Turn on LED1 on SOM-iMX8X */
-        config.outputLogic  = 1U;
-        GPIO_PinInit(GPIO1, 13U, &config);
-        pad_force_mux(SC_P_ADC_IN5, 4, SC_PAD_CONFIG_NORMAL,
+        /* Toggle base board reset, >= 30nS */
+        config.outputLogic  = 0U;
+        GPIO_PinInit(GPIO1, 1U, &config);
+        SYSTICK_CycleDelay(SC_SYSTICK_NSEC_TO_TICKS(30U) + 1U);
+        GPIO_WritePinOutput(GPIO1, 1U, 1U);
+
+        /* Latch output */
+        pad_force_mux(SC_P_SPI2_SDO, 4, SC_PAD_CONFIG_NORMAL,
             SC_PAD_ISO_ON);
+
+        /* Power off GPIO */
+        pm_force_resource_power_mode_v(SC_R_GPIO_1, SC_PM_PW_MODE_OFF);
     }
     else if (phase == BOOT_PHASE_TEST_INIT)
     {
@@ -312,9 +352,9 @@ void board_config_debug_uart(sc_bool_t early_phase)
             static sc_bool_t banner = SC_FALSE;
 
             /* Configure pads */
-            pad_force_mux(SC_P_SCU_GPIO0_00, 2, SC_PAD_CONFIG_NORMAL,
+            pad_force_mux(SC_P_ADC_IN2, 1, SC_PAD_CONFIG_NORMAL,
                 SC_PAD_ISO_OFF);
-            pad_force_mux(SC_P_SCU_GPIO0_01, 2, SC_PAD_CONFIG_NORMAL,
+            pad_force_mux(SC_P_ADC_IN3, 1, SC_PAD_CONFIG_NORMAL,
                 SC_PAD_ISO_OFF);
 
             /* Power and enable clock */
@@ -386,7 +426,7 @@ void board_config_sc(sc_rm_pt_t pt_sc)
     #ifdef ALT_DEBUG_UART
         (void) rm_set_resource_movable(SC_PT, SC_R_M4_0_UART, SC_R_M4_0_UART,
             SC_FALSE);
-        (void) rm_set_pad_movable(SC_PT, SC_P_SCU_GPIO0_00, SC_P_SCU_GPIO0_01,
+        (void) rm_set_pad_movable(SC_PT, SC_P_ADC_IN3, SC_P_ADC_IN2,
             SC_FALSE);
     #endif
 
@@ -506,10 +546,10 @@ sc_err_t board_init_ddr(sc_bool_t early, sc_bool_t ddr_initialized)
     #if defined(BD_DDR_RET) & !defined(SKIP_DDR)
         /* Storage for DRC registers */
         static ddrc board_ddr_ret_drc_inst[BD_DDR_RET_NUM_DRC];
-        
+
         /* Storage for DRC PHY registers */
         static ddr_phy board_ddr_ret_drc_phy_inst[BD_DDR_RET_NUM_DRC];
-        
+
         /* Storage for DDR regions */
         static uint32_t board_ddr_ret_buf1[BD_DDR_RET_REGION1_SIZE];
         #ifdef BD_DDR_RET_REGION2_SIZE
@@ -518,9 +558,9 @@ sc_err_t board_init_ddr(sc_bool_t early, sc_bool_t ddr_initialized)
         #ifdef BD_DDR_RET_REGION3_SIZE
         static uint32_t board_ddr_ret_buf3[BD_DDR_RET_REGION3_SIZE];
         #endif
-        
+
         /* DDR region descriptors */
-        static const soc_ddr_ret_region_t board_ddr_ret_region[BD_DDR_RET_NUM_REGION] = 
+        static const soc_ddr_ret_region_t board_ddr_ret_region[BD_DDR_RET_NUM_REGION] =
         {
             { BD_DDR_RET_REGION1_ADDR, BD_DDR_RET_REGION1_SIZE, board_ddr_ret_buf1 },
         #ifdef BD_DDR_RET_REGION2_SIZE
@@ -772,12 +812,11 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
     PARTITION_NAME(SECO_PT, "SECO");
     PARTITION_NAME(pt_boot, "BOOT");
 
-
     /* Configure initial resource allocation (note additional allocation
        and assignments can be made by the SCFW clients at run-time */
     if (alt_config != SC_FALSE)
     {
-        sc_rm_pt_t pt_m4_0  = SC_RM_NUM_PARTITION;
+        sc_rm_pt_t pt_m4_0 = SC_RM_NUM_PARTITION;
 
         #ifdef BOARD_RM_DUMP
             rm_dump(pt_boot);
@@ -834,7 +873,7 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
 
             /* Name partition for debug */
             PARTITION_NAME(pt_m4_0, "MCU0");
-
+            
             /* Allow AP to use SYSTEM (not production!) */
             BRD_ERR(rm_set_peripheral_permissions(SC_PT, SC_R_SYSTEM,
                 pt_boot, SC_RM_PERM_SEC_RW));
@@ -843,6 +882,9 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
             BRD_ERR(rm_find_memreg(pt_boot, &mr, 0x034FE0000ULL,
                 0x034FE0000ULL));
             BRD_ERR(rm_assign_memreg(pt_boot, pt_m4_0, mr));
+
+            /* Move partition to be owned by SC */
+            BRD_ERR(rm_set_parent(pt_boot, pt_m4_0, SC_PT));
 
             /* Check if booting with the no_ap flag set */
             if (no_ap != SC_FALSE)
@@ -881,7 +923,7 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
 
             /* Name partition for debug */
             PARTITION_NAME(pt, "Shared");
-
+            
             /* Share memory space */
             BRD_ERR(rm_find_memreg(SC_PT, &mr,
                 mem_list[0U].addr_start, mem_list[0U].addr_start));
@@ -911,7 +953,7 @@ sc_bool_t board_early_cpu(sc_rsrc_t cpu)
     {
         rtn = SC_TRUE;
     }
-    
+
     return rtn;
 }
 
@@ -1221,6 +1263,20 @@ void board_fault(sc_bool_t restarted, sc_bfault_t reason,
 }
 
 /*--------------------------------------------------------------------------*/
+/* Handle SECO FW fault                                                     */
+/*--------------------------------------------------------------------------*/
+void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
+    sc_sfault_t reason)
+{
+    #ifdef DEBUG
+        error_print("SECO Abort (mod %d, ln %d)\n", abort_module,
+            abort_line);
+    #else
+        board_fault(SC_FALSE, BOARD_BFAULT_SEC_FAIL, SECO_PT);
+    #endif
+}
+
+/*--------------------------------------------------------------------------*/
 /* Handle SECO/SNVS security violation                                      */
 /*--------------------------------------------------------------------------*/
 void board_security_violation(void)
@@ -1438,10 +1494,6 @@ static void pmic_init(void)
             SystemTimeDelay(2U);
 
             pmic_ver = GET_PMIC_VERSION(PMIC_0_ADDR);
-            board_print(3, "PMIC DEV ID: 0x%02X with Si Rev. %c%d (0x%02X)\n",  pmic_ver.device_id,
-                                                                                (char)(U8('A') + (pmic_ver.si_rev >> 4) - 1),
-                                                                                pmic_ver.si_rev & 0x0F,
-                                                                                pmic_ver.si_rev);
             temp_alarm = SET_PMIC_TEMP_ALARM(PMIC_0_ADDR,
                 PMIC_TEMP_MAX);
 
@@ -1470,7 +1522,7 @@ static void pmic_init(void)
                 /* Loop so WDOG will expire */
                 HALT;
             }
-            
+
             /* Configure STBY voltage for SW1 (VDD_MAIN) */
             if (board_parameter(BOARD_PARM_KS1_RETENTION)
                 == BOARD_PARM_KS1_RETENTION_ENABLE)
@@ -1661,5 +1713,5 @@ sc_err_t board_ioctl(sc_rm_pt_t caller_pt, sc_rsrc_t mu, uint32_t *parm1,
     return err;
 }
 
-/**@}*/
+/** @} */
 

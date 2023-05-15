@@ -31,11 +31,7 @@
 ## ###################################################################
 
 #Set Default DDR config file
-ifeq ($(Z),1)
-	DDR_CON ?= imx8qx_dcd_emul
-else
-	DDR_CON ?= imx8qx_dcd_1.2GHz
-endif
+DDR_CON ?= samsung
 
 OBJS += $(OUT)/board/$(CONFIG)_$(B)/board.o \
 		$(OUT)/board/board_common.o

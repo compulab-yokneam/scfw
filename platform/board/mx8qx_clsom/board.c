@@ -118,7 +118,7 @@
     /*! Use debugger terminal emulation */
     #define DEBUG_TERM_EMUL
 #endif
-#if DEBUG_UART == 2
+#if DEBUG_UART == 0
     /*! Use alternate debug UART */
     #define ALT_DEBUG_SCU_UART
 #endif

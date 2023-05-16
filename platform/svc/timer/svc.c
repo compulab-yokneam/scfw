@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -93,7 +93,7 @@ typedef struct
 
 /* Local Functions */
 
-static void update_alarm(void);
+static sc_err_t update_alarm(void);
 static void update_sysctr(void);
 static uint32_t epoc2secs(uint16_t year, uint8_t mon, uint8_t day,
     uint8_t hour, uint8_t min, uint8_t sec);
@@ -107,6 +107,10 @@ static const uint8_t days_in_month[2][12] =
     { 31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U },
     { 31U, 29U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U }
 };
+
+#ifdef SECO_DISABLE
+    #define SC_FAKE_RTC
+#endif
 
 #if defined(SC_FAKE_RTC)
     /*! Fake RTC seconds */
@@ -528,31 +532,35 @@ sc_err_t timer_set_rtc_time(sc_rm_pt_t caller_pt, uint16_t year, uint8_t mon,
             secs = rtc_seconds;
         #else
             SNVS_GetRtc(&secs);
-        #endif
-
-        /* Update periodic alarms */
-        for (sc_rm_pt_t p = 0U; p < SC_RM_NUM_PARTITION; p++)
-        {
-            if (timer_part_data[p].rtc_period != 0U)
-            {
-                timer_part_data[p].rtc_alarm =
-                    timer_part_data[p].rtc_alarm
-                    - secs + seconds;
-            }
-        }
-
-        /* Program into the RTC */
-        #if defined(SC_FAKE_RTC)
-            rtc_seconds = seconds;
-            rtc_mseconds = 0U;
-        #else
-            SNVS_SetRtc(seconds);
             err = snvs_err;
-            if (err == SC_ERR_NONE)
-            {
-                SNVS_Functional_IRQHandler();
-            }
         #endif
+
+        if (err == SC_ERR_NONE)
+        {
+            /* Update periodic alarms */
+            for (sc_rm_pt_t p = 0U; p < SC_RM_NUM_PARTITION; p++)
+            {
+                if (timer_part_data[p].rtc_period != 0U)
+                {
+                    timer_part_data[p].rtc_alarm =
+                        timer_part_data[p].rtc_alarm
+                        - secs + seconds;
+                }
+            }
+
+            /* Program into the RTC */
+            #if defined(SC_FAKE_RTC)
+                rtc_seconds = seconds;
+                rtc_mseconds = 0U;
+            #else
+                SNVS_SetRtc(seconds);
+                err = snvs_err;
+                if (err == SC_ERR_NONE)
+                {
+                    SNVS_Functional_IRQHandler();
+                }
+            #endif
+        }
     }
 
     return err;
@@ -595,17 +603,17 @@ sc_err_t timer_get_rtc_time(sc_rm_pt_t caller_pt, uint16_t *year,
         /* Figure out year */
         days = secs / DAY_SECS;
         *year = EPOCH;
-        while (days >= YEAR_DAYS((*year)))
+        while (days >= YEAR_DAYS((U32(*year))))
         {
-            days -= YEAR_DAYS((*year));
+            days -= YEAR_DAYS((U32(*year)));
             (*year)++;
         }
 
         /* Figure out month */
         *mon = 0U;
-        while (days >= days_in_month[B2U16(LEAP_YEAR(*year))][*mon])
+        while (days >= days_in_month[B2U16(LEAP_YEAR(U32(*year)))][*mon])
         {
-            days -= days_in_month[B2U16(LEAP_YEAR(*year))][*mon];
+            days -= days_in_month[B2U16(LEAP_YEAR(U32(*year)))][*mon];
             (*mon)++;
         }
         *mon += 1U;
@@ -648,7 +656,7 @@ sc_err_t timer_set_rtc_alarm(sc_rm_pt_t caller_pt, uint16_t year,
         timer_part_data[caller_pt].rtc_period = 0U;
 
         /* Update alarm */
-        update_alarm();
+        err = update_alarm();
     }
 
     return err;
@@ -689,7 +697,7 @@ sc_err_t timer_set_rtc_periodic_alarm(sc_rm_pt_t caller_pt, uint32_t sec)
         timer_part_data[caller_pt].rtc_alarm = seconds;
         timer_part_data[caller_pt].rtc_period = sec;
 
-        update_alarm();
+        err = update_alarm();
     }
 
     return err;
@@ -711,7 +719,7 @@ sc_err_t timer_cancel_rtc_alarm(sc_rm_pt_t caller_pt)
         timer_part_data[caller_pt].rtc_alarm = UINT32_MAX;
         timer_part_data[caller_pt].rtc_period = 0U;
 
-        update_alarm();
+        err = update_alarm();
     }
 
     return err;
@@ -753,7 +761,7 @@ void timer_restore_rtc_alarm(sc_rm_pt_t pt, uint32_t alarm,
         timer_part_data[pt].rtc_alarm = alarm;
         timer_part_data[pt].rtc_period = period;
 
-        update_alarm();
+        err = update_alarm();
     }
 }
 
@@ -875,46 +883,57 @@ void timer_tick(uint16_t msec)
 /*--------------------------------------------------------------------------*/
 /* RTC alarm ISR                                                            */
 /*--------------------------------------------------------------------------*/
-#if !defined(SC_FAKE_RTC)
-    void SNVS_Functional_IRQHandler(void)
-    {
+void SNVS_Functional_IRQHandler(void)
+{
+    #if !defined(SC_FAKE_RTC)
         uint32_t seconds = UINT32_MAX;
-        sc_rm_pt_t p;
 
         SNVS_GetRtc(&seconds);
 
-        /* Notify users of alarm */
-        for (p = 0U; p < SC_RM_NUM_PARTITION; p++)
+        if (snvs_err == SC_ERR_NONE)
         {
-            /* Alarm time expired? */
-            if (seconds >= timer_part_data[p].rtc_alarm)
+            sc_rm_pt_t p;
+
+            /* Notify users of alarm */
+            for (p = 0U; p < SC_RM_NUM_PARTITION; p++)
             {
-                /* Handle one-shot alarm */
-                if (timer_part_data[p].rtc_period == 0U)
+                /* Alarm time expired? */
+                if (seconds >= timer_part_data[p].rtc_alarm)
                 {
-                    timer_part_data[p].rtc_alarm = UINT32_MAX;
-                }
-                else
-                {
-                    timer_part_data[p].rtc_alarm = seconds
-                        + timer_part_data[p].rtc_period;
-                }
-                /* Trigger user interrupt */
-                ss_irq_trigger(SC_IRQ_GROUP_RTC, BIT(p), p);
-                if (p == SC_PT)
-                {
+                    /* Handle one-shot alarm */
+                    if (timer_part_data[p].rtc_period == 0U)
+                    {
+                        timer_part_data[p].rtc_alarm = UINT32_MAX;
+                    }
+                    else
+                    {
+                        timer_part_data[p].rtc_alarm = seconds
+                            + timer_part_data[p].rtc_period;
+                    }
+                    /* Trigger user interrupt */
+                    ss_irq_trigger(SC_IRQ_GROUP_RTC, BIT(p), p);
+                    if (p == SC_PT)
+                    {
 #ifdef HAS_SECO
-                    /* Service SECO watchdog */
-                    SECO_KickWdog();
+                        /* Service SECO watchdog */
+                        SECO_KickWdog();
 #endif
+                    }
                 }
             }
+
+            /* Configure next alarm (and clear) */
+            update_alarm();
+        }
+        else
+        {
+#ifndef NO_DEVICE_ACCESS
+            NVIC_DisableIRQ(SNVS_Functional_IRQn);
+#endif
         }
 
-        /* Configure next alarm (and clear) */
-        update_alarm();
-    }
-#endif
+    #endif
+}
 
 /*--------------------------------------------------------------------------*/
 /* Set the sysctr alarm                                                     */
@@ -1073,46 +1092,54 @@ void SYSCTR_CMP1_IRQHandler(void)
 /*--------------------------------------------------------------------------*/
 /* Update RTC alarm                                                         */
 /*--------------------------------------------------------------------------*/
-static void update_alarm(void)
+static sc_err_t update_alarm(void)
 {
     #if !defined(SC_FAKE_RTC)
-        sc_rm_pt_t p;
         uint32_t secs;
-        uint32_t seconds = UINT32_MAX;
 
         /* Get current RTC */
         SNVS_GetRtc(&secs);
-        
-        /* Search for next time */
-        for (p = 0U; p < SC_RM_NUM_PARTITION; p++)
+
+        if (snvs_err == SC_ERR_NONE)
         {
-            /* Alarm time passed? */
-            if (timer_part_data[p].rtc_alarm <= secs)
+            sc_rm_pt_t p;
+            uint32_t seconds = UINT32_MAX;
+
+            /* Search for next time */
+            for (p = 0U; p < SC_RM_NUM_PARTITION; p++)
             {
-                /* Periodic? */
-                if (timer_part_data[p].rtc_period == 0U)
+                /* Alarm time passed? */
+                if (timer_part_data[p].rtc_alarm <= secs)
                 {
-                    /* Cancel */
-                    timer_part_data[p].rtc_alarm = UINT32_MAX;
+                    /* Periodic? */
+                    if (timer_part_data[p].rtc_period == 0U)
+                    {
+                        /* Cancel */
+                        timer_part_data[p].rtc_alarm = UINT32_MAX;
+                    }
+                    else
+                    {
+                        /* Next period */
+                        timer_part_data[p].rtc_alarm = seconds
+                            + timer_part_data[p].rtc_period;
+                    }
+
+                    /* Trigger interrupt */
+                    ss_irq_trigger(SC_IRQ_GROUP_RTC, BIT(p), p);                
                 }
                 else
                 {
-                    /* Next period */
-                    timer_part_data[p].rtc_alarm = seconds
-                        + timer_part_data[p].rtc_period;
+                    /* Earlier time? */
+                    seconds = MIN(seconds, timer_part_data[p].rtc_alarm);
                 }
+            }
 
-                /* Trigger interrupt */
-                ss_irq_trigger(SC_IRQ_GROUP_RTC, BIT(p), p);                
-            }
-            else
-            {
-                /* Earlier time? */
-                seconds = MIN(seconds, timer_part_data[p].rtc_alarm);
-            }
+            SNVS_SetRtcAlarm(seconds);
         }
 
-        SNVS_SetRtcAlarm(seconds);
+        return snvs_err;
+    #else
+        return SC_ERR_NONE;
     #endif
 }
 
@@ -1165,7 +1192,7 @@ static uint32_t epoc2secs(uint16_t year, uint8_t mon, uint8_t day,
     new_mon--;
     while (new_mon > 0U)
     {
-        secs += days_in_month[B2U16(LEAP_YEAR(new_year))][new_mon - 1U]
+        secs += days_in_month[B2U16(LEAP_YEAR(U32(new_year)))][new_mon - 1U]
             * DAY_SECS;
         new_mon--;
     }
@@ -1177,7 +1204,7 @@ static uint32_t epoc2secs(uint16_t year, uint8_t mon, uint8_t day,
     new_year--;
     while (new_year >= EPOCH)
     {
-        secs += YEAR_DAYS(new_year) * DAY_SECS;
+        secs += YEAR_DAYS(U32(new_year)) * DAY_SECS;
         new_year--;
     }
 

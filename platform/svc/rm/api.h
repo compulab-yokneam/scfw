@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -245,8 +245,13 @@ sc_err_t sc_rm_set_confidential(sc_ipc_t ipc, sc_rm_pt_t pt, sc_bool_t retro);
  * - SC_ERR_NOACCESS if caller's partition is not the parent of \a pt,
  * - SC_ERR_LOCKED if \a pt or caller's partition is locked
  *
- * All resources, memory regions, and pads are assigned to the caller/parent.
+ * All resources, memory regions, and pads are assigned to the parent.
  * The partition watchdog is disabled (even if locked). DID is freed.
+ *
+ * Note this call does not stop running bus masters. Moving running masters
+ * back to the parent could be a **security risk**. The caller of this
+ * function needs to ensure bus masters are halted first. See @ref RM_PT for
+ * more information.
  */
 /* IDL: E8 PARTITION_FREE(UI8 pt) #2 */
 sc_err_t sc_rm_partition_free(sc_ipc_t ipc, sc_rm_pt_t pt);

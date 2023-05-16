@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 NXP
+ * Copyright 2017-2022 NXP
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -100,6 +100,13 @@
 /** @} */
 
 /*!
+ * @name Defines for setpoints
+ */
+/** @{ */
+#define SECO_SETPOINT_V2X_OVD       BIT8(0)    /*!< V2X in overdrive */
+/** @} */
+
+/*!
  * @name Defines for V2X state
  */
 /** @{ */
@@ -138,6 +145,24 @@
 /** @{ */
 #define V2X_RECOVER_NONE     0x00U   /*!< No flags */
 #define V2X_RECOVER_AUTH     0x01U   /*!< Send FW recovery */
+/** @} */
+
+/*!
+ * @name Defines for boot state
+ */
+/** @{ */
+#define SECO_BOOT_STAGE_MASK 0x0FU   /*!< Boot stage mask */
+#define SECO_BOOT_PRIMARY    0x06U   /*!< Primary */
+#define SECO_BOOT_SECONDARY  0x09U   /*!< Secondary */
+#define SECO_BOOT_RECOVERY   0x0AU   /*!< Recovery */
+#define SECO_BOOT_SERIAL     0x05U   /*!< Serial download */
+#define SECO_BOOT_SCU_MASK   0x30U   /*!< SCU state mask */
+#define SECO_BOOT_SCU_AUTH   0x10U   /*!< SCU authorized */
+#define SECO_BOOT_SCU_FAIL   0x20U   /*!< SCU failed */
+#define SECO_BOOT_SECO_MASK  0xC0U   /*!< SECO state mask */
+#define SECO_BOOT_SECO_AUTH  0x40U   /*!< SECU authorized */
+#define SECO_BOOT_SECO_FAIL  0x80U   /*!< SECO failed */
+#define SECO_BOOT_SECO_V2X   0xC0U   /*!< V2X failed */
 /** @} */
 
 #ifdef NO_DEVICE_ACCESS
@@ -300,6 +325,18 @@ void SECO_CAAM_Config_TD(uint16_t jr, sc_bool_t allow, sc_bool_t lock);
 void SECO_ClearCache(void);
 
 /*!
+ * This function notifies SECO of an MU power off.
+ *
+ * @param[in]     mu          index of MU
+ * @param[in]     forced      1=release resources
+ *
+ * Called by the Resource Manager to tell SECO MU is being powered off.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_MU_PowerDown(uint8_t mu, uint8_t forced);
+
+/*!
  * This function configures MU ownership.
  *
  * @param[in]     mu          Index of MU
@@ -333,41 +370,42 @@ void SECO_MU_Config(uint8_t mu, sc_rm_spa_t sa, sc_rm_did_t did);
  void SECO_SetMonoCounterPartition(uint16_t *she, uint16_t *hsm);
 
 /*!
- * This function configures the SECO in FIPS mode.
+ * This function returns the boot state as recorded by the ROM.
  *
- * @param[in]     mode        FIPS mode
+ * This function is normally used by the ROM to read the state so it knows
+ * what device/container to boot from. By the time is starts the SCFW,
+ * the boot stage will be set back to SECO_BOOT_PRIMARY. Other bits of info
+ * are also in the state.
  *
- * This function permanently configures the SECO in FIPS approved mode. When in
- * FIPS approved mode the following services will be disabled and receive a
- * failure response:
- *
- * - Encrypted boot is not supported
- * - Attestation is not supported
- * - Manufacturing protection is not supported
- * - DTCP load
- * - SHE services are not supported
- * - Assign JR is not supported (all JRs owned by SECO)
- *
- * @return Returns the failure reason.
+ * @return Returns the state.
  *
  * See the SECO API Reference Guide for more info.
  */
-uint32_t SECO_SetFipsMode(uint8_t mode);
+uint8_t SECO_GetBootState(void);
 
 /*!
- * This function will securely zeroize all plaintext secret and private
- * cryptographic keys and CSPs within the module.
+ * This function sets the boot state.
  *
- * @param[in]     addr        address of message block
+ * @param[in]     state       boot state
  *
- * Note \a addr must be a pointer to a signed message block.
- *
- * This function is effective when the part is configured in FIPS approved
- * mode only, no effects otherwise.
+ * This can be used to move the boot stage. After calling, do a warm
+ * reset via board_reset().
  *
  * See the SECO API Reference Guide for more info.
  */
-void SECO_FipsKeyZero(sc_faddr_t addr);
+void SECO_SetBootState(uint8_t state);
+
+/*!
+ * This function forces SECO into an aborted state.
+ */
+void SECO_Abort(void);
+
+/*!
+ * This function returns the SECO abort state.
+ *
+ * @return Returns the state.
+ */
+sc_bool_t SECO_IsAborted(void);
 
 /** @} */
 
@@ -413,6 +451,17 @@ void SECO_EnterLPM(void);
  * See the SECO API Reference Guide for more info.
  */
 void SECO_ExitLPM(void);
+
+
+/*!
+ * This function provides information regarding the operational
+ * environment of the device.
+ *
+ * @param[in]     setpoint    setpoint flags
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_UpdateSetpoint(uint8_t setpoint);
 
 /** @} */
 
@@ -681,6 +730,155 @@ void SECO_GetMPSign(sc_faddr_t msg_addr, uint16_t msg_size,
 
 /** @} */
 
+#ifdef HAS_FIPS
+
+/*!
+ * @name FIPS Functions
+ * @{
+ */
+
+/*!
+ * This function configures the SECO in FIPS mode.
+ *
+ * @param[in]     mode        FIPS mode
+ *
+ * This function permanently configures the SECO in FIPS approved mode. It
+ * is supported on devices that support setting fuses to enable FIPS mode
+ * (e.g. i.MX8QXP). Devices that set fuses to disable FIPS mode should use
+ * SECO_FIPS_ClusterDegrade() instead.
+ *
+ * When in FIPS approved mode the following services will be disabled and
+ * receive a failure response:
+ *
+ * - Encrypted boot is not supported
+ * - Attestation is not supported
+ * - Manufacturing protection is not supported
+ * - DTCP load
+ * - SHE services are not supported
+ * - Assign JR is not supported (all JRs owned by SECO)
+ *
+ * @return Returns the failure reason.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+uint32_t SECO_FIPS_SetMode(uint8_t mode);
+
+/*!
+ * This function securely degrades the SECO and/or V2X from FIPS to non-FIPS
+ * modes.
+ *
+ * @param[in]     addr        address of message block
+ *
+ * Note \a addr must be a pointer to a signed message block.
+ *
+ * It is currently supported only on devices that are FIPS enabled and support
+ * setting fuses to disable FIPS mode (e.g. i.MX8DXL B0). Devices that support
+ * fuse programming to enable FIPS mode should use SECO_FIPS_SetMode() instead.
+ *
+ * Disabling FIPS mode involves burning a fuse, so is not reversible. Please
+ * note that this command is handled by SECO for all targets and doesn't
+ * authorize degrading only SECO (accepts degrading SECO and V2X together,
+ * or degrading only V2X).
+ *
+ * @return Returns the FIPS degradation status.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+uint32_t SECO_FIPS_ClusterDegrade(sc_faddr_t addr);
+
+/*!
+ * This function will securely zeroize all plaintext secret and private
+ * cryptographic keys and CSPs within the module.
+ *
+ * @param[in]     addr        address of message block
+ *
+ * Note \a addr must be a pointer to a signed message block.
+ *
+ * This function is effective when the part is configured in FIPS
+ * mode only, no effects otherwise.
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_FIPS_KeyZero(sc_faddr_t addr);
+
+/*!
+ * This function is used to retrieve the SECO FIPS error log.
+ *
+ * @param[out]    payload     address to return the abort payload
+ * @param[out]    bitmap      address to reutrn the self-test bitmap
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_FIPS_Errorlog(uint32_t *payload, uint32_t *bitmap);
+
+/*!
+ * This function is used to request the running of SECO FIPS self-tests.
+ *
+ * @param[in]     flags       flags to force tests or failures
+ * @param[in]     bitmap      bitmap of tests to run
+ *
+ * This function is only supported on FIPS 140-3 approved devices (e.g. i.MX8DXL B0).
+ * The target bits in the flags field combined with the bitmap field selects which
+ * tests will be run. If the force run bit in the flags field is clear, each requested
+ * self-test will only be run if it has not previously been run since the last boot.
+ * If the force run bit is set, each requested self-test will be run unconditionally.
+ * The command will return success if all requested self-tests pass. An abort will
+ * occur if any self-tests fail. For testing purposes, the force fail bit can be set
+ * to simulate self-test failures in a healthy device. Note that non-existent tests
+ * in the bitmap are ignored, so setting the self-test bitmap to 0x00FFFFFF will
+ * request all implemented tests for the given target.
+ *
+ * Flags:
+ * - Bit 7 - Force Run
+ * - Bit 6 - Force Fail
+ * - Bit 1:0 - Target 00=SECO, 01=V2XP, 10=V2XS
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_FIPS_Selftests(uint8_t flags, uint32_t bitmap);
+
+/*!
+ * This function is used to retrieve information regarding the device, firmware and
+ * configuration. It is specifically targeted to identify whether the device is in a
+ * FIPS certified configuration.
+ *
+ * @param[out]    info_block  address to reutrn the info block
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_FIPS_DeviceInfo(uint32_t *info_block);
+
+/*!
+ * This function can be called after SECO FW download to verify that the downloaded
+ * FW is correct (hash of FW image matches hash when FW was authenticated). In case
+ * of error in FW image integrity, the SECO enters the abort state.
+ *
+ * @param[in]     target      flags to inidicate target core(s)
+ *
+ * Targets:
+ *  
+ *  Bit 0 - SECO
+ *  -   0 = Do not run integrity test on SECO FW
+ *  -   1 = Run integrity test in SECO FW
+ *
+ *  Bit 1 - V2X Primary core
+ *  -   0 = Do not run integrity test on V2X Primary core FW
+ *  -   1 = Run integrity test on V2X Primary core FW
+ *
+ *  Bit 2 - V2X Secondary core
+ *  -   0 = Do not run integrity test on V2X Secondary core FW
+ *  -   1 = Run integrity test on V2X Secondary core FW
+ *
+ *  Bit 3 - 7: Reserved, must be set to 0
+ *
+ * See the SECO API Reference Guide for more info.
+ */
+void SECO_FIPS_IntegrityTest(uint8_t target);
+
+/** @} */
+
+#endif
+
 #ifdef HAS_V2X
 
 /*!
@@ -694,6 +892,8 @@ void SECO_GetMPSign(sc_faddr_t msg_addr, uint16_t msg_size,
  * @param[in]     buf         pointer to message buffer
  *
  * @return Returns number of words in response.
+ *
+ * See the SECO API Reference Guide for more info.
  */
 uint8_t SECO_V2X_Forward(uint32_t *buf);
 

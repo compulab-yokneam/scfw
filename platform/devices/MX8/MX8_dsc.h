@@ -8,6 +8,7 @@
 **         CMSIS Peripheral Access Layer for the DSC
 **
 **     Copyright (c) 1997 - 2016 Freescale Semiconductor, Inc.
+**     Copyright 2017-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:

@@ -8,7 +8,7 @@
 **         CMSIS Peripheral Access Layer for MX8
 **
 **     Copyright (c) 1997 - 2015 Freescale Semiconductor, Inc.
-**     Copyright 2017-2019 NXP
+**     Copyright 2016-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -441,8 +441,6 @@
 
 #define FSL_FEATURE_DPLL_VER                (18U)
 #define FSL_FEATURE_AV_PLL_ENABLE_ALT       (1U)
-
-#define FSL_FEATURE_PCIE_DPLL_SS            (0U)
 
 /* CSR module features */
 #define FSL_FEATURE_CSR_HAS_CSR             (0U)

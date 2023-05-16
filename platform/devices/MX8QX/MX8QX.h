@@ -8,7 +8,7 @@
 **         CMSIS Peripheral Access Layer for MX8
 **
 **     Copyright (c) 1997 - 2015 Freescale Semiconductor, Inc.
-**     Copyright 2017-2019 NXP
+**     Copyright 2016-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -701,6 +701,11 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE uint64_t LDRD (const __IO uin
 
   return(llr.w64);
 }
+
+/**
+ * @brief 32-bit floating-point type definition.
+ */
+typedef float float32_t;
 
 /*!
  * @}

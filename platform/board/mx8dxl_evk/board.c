@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -79,6 +79,9 @@
 #ifdef HAS_SECO
 #include "drivers/seco/fsl_seco.h"
 #endif
+#ifdef HAS_V2X
+#include "drivers/v2x/fsl_v2x.h"
+#endif
 
 /* Local Defines */
 
@@ -118,8 +121,8 @@
 #define BRD_R_BOARD_R2          5U       /*!< PCA6416APW - U84 */
 #define BRD_R_BOARD_R3          6U       /*!< PCA9548APW - U76 */
 #define BRD_R_BOARD_R4          7U       /*!< PCA6416APW - U82 */
-#define BRD_R_BOARD_R5          8U       /*!< PCA6416APW - U101 (rev A) */
-#define BRD_R_BOARD_R6          9U       /*!< VDD_MII_SELECT (rev B) */
+#define BRD_R_BOARD_R5          8U
+#define BRD_R_BOARD_R6          9U       /*!< VDD_MII_SELECT (rev B/C) */
 #define BRD_R_BOARD_R7          10U      /*!< Test */
 /** @} */
 
@@ -383,10 +386,6 @@ board_parm_rtn_t board_parameter(board_parm_t parm)
            BOARD_PARM_RTN_EXTERNAL or BOARD_PARM_RTN_INTERNAL */
         case BOARD_PARM_PCIE_PLL :
             rtn = BOARD_PARM_RTN_INTERNAL;
-            break;
-        /* Spread Spectrum SPREAD value for PCIE DPLL */
-        case BOARD_PARM_PCIE_DPLL_SS:
-            rtn = BOARD_PARM_RTN_NOT_USED;
             break;
         /* Supply ramp delay in usec for KS1 exit */
         case BOARD_PARM_KS1_RESUME_USEC:
@@ -725,9 +724,13 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
         BRD_ERR(rm_memreg_frag(pt_boot, &mr_temp,
             U64(fw_start), U64(fw_end)));
         BRD_ERR(rm_assign_memreg(pt_boot, SECO_PT, mr_temp));
-        /* Not required on DXL B0 */
-        BRD_ERR(rm_set_memreg_permissions(SECO_PT, mr_temp,
-            SECO_PT, SC_RM_PERM_FULL));
+
+        /* Workaround for ERR051079 - not required on DXL B0 */
+        if (CHIP_VER < CHIP_VER_B0)
+        {
+            BRD_ERR(rm_set_memreg_permissions(SECO_PT, mr_temp,
+                SECO_PT, SC_RM_PERM_FULL));
+        }
     }
 
     /* Name default partitions */
@@ -776,7 +779,7 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
                 RM_RANGE(SC_P_ADC_IN1, SC_P_ADC_IN2),
                 RM_RANGE(SC_P_FLEXCAN2_RX, SC_P_FLEXCAN2_TX),
                 RM_RANGE(SC_P_SPI1_SDI, SC_P_SPI1_CS0),
-                RM_RANGE(SC_P_QSPI0A_DATA0, SC_P_COMP_CTL_GPIO_1V8_3V3_QSPI0B)
+                RM_RANGE(SC_P_QSPI0A_DATA1, SC_P_COMP_CTL_GPIO_1V8_3V3_QSPI0B)
             };
 
             /* List of memory regions */
@@ -869,14 +872,14 @@ void board_system_config(sc_bool_t early, sc_rm_pt_t pt_boot)
         #endif
     }
 
-#ifdef ERR050601_WORKAROUND
-    /* Power up M4 MU for ddr stress test tool */
+    /* Workaround for ERR050601 - allows the DDR stress test tool to use the
+       M4 MU instead of one in LSIO - DO NOT remove! Even though the issue
+       is fixed the stress tool will continue to use the M4 MU even on B0. */
     if (ddrtest != SC_FALSE)
     {
         pm_force_resource_power_mode_v(SC_R_M4_0_MU_1A,
             SC_PM_PW_MODE_ON);
     }
-#endif
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1052,9 +1055,10 @@ sc_err_t board_reset(sc_pm_reset_type_t type, sc_pm_reset_reason_t reason,
         /* Request PMIC do a cold reset */
     }
     else if ((type == SC_PM_RESET_TYPE_WARM)
-        && (reason == SC_PM_RESET_REASON_V2X_DEBUG))
+        && ((reason == SC_PM_RESET_REASON_V2X_DEBUG)
+        || (reason == SC_PM_RESET_REASON_BOOT_STAGE)))
     {
-        /* Disable WDOG_OUT */
+        /* Disable WDOG_OUT to prevent bounce of VDD_MAIN */
         PAD_SetMux(IOMUXD__JTAG_TRST_B, 4U, SC_PAD_CONFIG_NORMAL,
             SC_PAD_ISO_OFF);
     }
@@ -1199,6 +1203,8 @@ void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
         {
             error_print("SECO Abort (mod %d, ln %d)\n", abort_module,
                 abort_line);
+            ss_irq_trigger(SC_IRQ_GROUP_WAKE, SC_IRQ_SECO_ABORT, SC_PT_ALL);
+            V2X_Abort();
         }
         else if (reason == BOARD_SFAULT_V2X_ABORT)
         {
@@ -1215,6 +1221,68 @@ void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
             board_fault(SC_FALSE, BOARD_BFAULT_SEC_FAIL, SECO_PT);
         }
     #endif
+}
+
+/*--------------------------------------------------------------------------*/
+/* Report V2X authentication complete state                                 */
+/*--------------------------------------------------------------------------*/
+void board_v2x_auth_state(uint8_t state)
+{
+    static sc_bool_t v2x_success = SC_FALSE;
+
+    if ((state & V2X_STATE_AUTH_SUCCESS) != 0U)
+    {
+        /* One success implies primary image may be good */
+        v2x_success = SC_TRUE;
+    }
+    else if ((state & V2X_STATE_AUTH_FAIL) != 0U)
+    {
+        sc_pm_reset_type_t type = SC_PM_RESET_TYPE_BOARD;
+
+        /* If V2X never pass authenticate, then move stage */
+        if (v2x_success == SC_FALSE)
+        {
+            sc_misc_bt_t current_state;
+
+            if (misc_get_boot_type(SC_PT, &current_state) == SC_ERR_NONE)
+            {
+                uint8_t next_state = SECO_BOOT_PRIMARY;
+
+                /* Reboot type to warm else next state is lost */
+                type = SC_PM_RESET_TYPE_WARM;
+
+                /* Determine next state */
+                switch (current_state)
+                {
+                    case SC_MISC_BT_PRIMARY :
+                        next_state = SECO_BOOT_SECONDARY;
+                        break;
+                    case SC_MISC_BT_SECONDARY :
+                        next_state = SECO_BOOT_RECOVERY;
+                        break;
+                    case SC_MISC_BT_RECOVERY :
+                        next_state = SECO_BOOT_SERIAL;
+                        break;
+                    case SC_MISC_BT_SERIAL :
+                        next_state = SECO_BOOT_SERIAL;
+                        break;
+                    default :
+                        type = SC_PM_RESET_TYPE_BOARD;
+                        break;
+                }
+
+                /* Reboot to next state */
+                SECO_SetBootState(next_state);
+            }
+        }
+
+        /* Reboot */
+        (void) board_reset(type, SC_PM_RESET_REASON_BOOT_STAGE, SC_PT);
+    }
+    else
+    {
+        ; /* Intentional empty else */
+    }
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1395,6 +1463,13 @@ void SNVS_Button_IRQHandler(void)
 {
     SNVS_ClearButtonIRQ();
 
+    /* Do not enable if SECO unavailable */
+    if (snvs_err != SC_ERR_NONE)
+    {
+        NVIC_DisableIRQ(SNVS_Button_IRQn);
+    }
+
+    /* Notify clients */
     ss_irq_trigger(SC_IRQ_GROUP_WAKE, SC_IRQ_BUTTON, SC_PT_ALL);
 }
 
@@ -1545,6 +1620,14 @@ sc_err_t board_ioctl(sc_rm_pt_t caller_pt, sc_rsrc_t mu, uint32_t *parm1,
 #endif
 
     return err;
+}
+
+/*--------------------------------------------------------------------------*/
+/* Board custom monitor command                                             */
+/*--------------------------------------------------------------------------*/
+sc_err_t board_monitor_custom(int argc, char *argv[])
+{
+    return SC_ERR_NONE;
 }
 
 /** @} */

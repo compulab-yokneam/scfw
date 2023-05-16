@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -43,6 +43,8 @@
  * @addtogroup PAD_SVC PAD: Pad Service
  *
  * @brief Module for the Pad Control (PAD) service.
+ *
+ * @anchor pad_det
  *
  * @details
  *
@@ -245,7 +247,9 @@ typedef uint8_t sc_pad_28fdsoi_pus_t;
  * Note muxing two input pads to the same IP functional signal will
  * result in undefined behavior.
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 SET_MUX(UI16 pad, UI8 mux, UI8 config, UI8 iso) #1 */
 sc_err_t sc_pad_set_mux(sc_ipc_t ipc, sc_pad_t pad,
@@ -267,7 +271,9 @@ sc_err_t sc_pad_set_mux(sc_ipc_t ipc, sc_pad_t pad,
  * - SC_PARM if arguments out of range or invalid,
  * - SC_ERR_NOACCESS if caller's partition is not the pad owner
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 GET_MUX(UI16 pad, UO8 mux, UO8 config, UO8 iso) #6 */
 sc_err_t sc_pad_get_mux(sc_ipc_t ipc, sc_pad_t pad,
@@ -289,7 +295,9 @@ sc_err_t sc_pad_get_mux(sc_ipc_t ipc, sc_pad_t pad,
  * - SC_PARM if arguments out of range or invalid,
  * - SC_ERR_NOACCESS if caller's partition is not the pad owner
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 SET_GP(UI16 pad, UI32 ctrl) #2 */
 sc_err_t sc_pad_set_gp(sc_ipc_t ipc, sc_pad_t pad, uint32_t ctrl);
@@ -310,7 +318,9 @@ sc_err_t sc_pad_set_gp(sc_ipc_t ipc, sc_pad_t pad, uint32_t ctrl);
  * - SC_PARM if arguments out of range or invalid,
  * - SC_ERR_NOACCESS if caller's partition is not the pad owner
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 GET_GP(UI16 pad, UO32 ctrl) #7 */
 sc_err_t sc_pad_get_gp(sc_ipc_t ipc, sc_pad_t pad, uint32_t *ctrl);
@@ -328,7 +338,9 @@ sc_err_t sc_pad_get_gp(sc_ipc_t ipc, sc_pad_t pad, uint32_t *ctrl);
  * - SC_PARM if arguments out of range or invalid,
  * - SC_ERR_NOACCESS if caller's partition is not the pad owner
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 SET_WAKEUP(UI16 pad, UI8 wakeup) #4 */
 sc_err_t sc_pad_set_wakeup(sc_ipc_t ipc, sc_pad_t pad,
@@ -347,7 +359,9 @@ sc_err_t sc_pad_set_wakeup(sc_ipc_t ipc, sc_pad_t pad,
  * - SC_PARM if arguments out of range or invalid,
  * - SC_ERR_NOACCESS if caller's partition is not the pad owner
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 GET_WAKEUP(UI16 pad, UO8 wakeup) #9 */
 sc_err_t sc_pad_get_wakeup(sc_ipc_t ipc, sc_pad_t pad,
@@ -376,7 +390,9 @@ sc_err_t sc_pad_get_wakeup(sc_ipc_t ipc, sc_pad_t pad,
  * Note muxing two input pads to the same IP functional signal will
  * result in undefined behavior.
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 SET_ALL(UI16 pad, UI8 mux, UI8 config, UI8 iso, UI32 ctrl, UI8 wakeup) #5 */
 sc_err_t sc_pad_set_all(sc_ipc_t ipc, sc_pad_t pad, uint8_t mux,
@@ -403,7 +419,9 @@ sc_err_t sc_pad_set_all(sc_ipc_t ipc, sc_pad_t pad, uint8_t mux,
  *
  * @return Returns an error code (SC_ERR_NONE = success).
  *
- * Refer to the SoC [Pad List](@ref PADS) for valid pad values.
+ * Refer to the SoC [Pad List](@ref PADS) for valid pad values. See
+ * the [Pad Service Detailed Description](\ref pad_det) for more on
+ * parameter definitions.
  */
 /* IDL: E8 GET_ALL(UI16 pad, UO8 mux, UO8 config, UO8 iso, UO32 ctrl, UO8 wakeup) #10 */
 sc_err_t sc_pad_get_all(sc_ipc_t ipc, sc_pad_t pad, uint8_t *mux,

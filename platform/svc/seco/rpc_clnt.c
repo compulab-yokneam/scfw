@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2021 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -504,31 +504,6 @@ sc_err_t sc_seco_get_mp_sign(sc_ipc_t ipc, sc_faddr_t msg_addr,
     return err;
 }
 
-/* IDL: R0 BUILD_INFO(UO32 version, UO32 commit) #16 */
-void sc_seco_build_info(sc_ipc_t ipc, uint32_t *version, uint32_t *commit)
-{
-    sc_rpc_msg_t msg;
-
-    /* Fill in header */
-    RPC_VER(&msg) = SC_RPC_VERSION;
-    RPC_SIZE(&msg) = 1U;
-    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
-    RPC_FUNC(&msg) = U8(SECO_FUNC_BUILD_INFO);
-
-    /* Call RPC */
-    sc_call_rpc(ipc, &msg, SC_FALSE);
-
-    /* Copy out receive message */
-    if (version != NULL)
-    {
-        *version = (uint32_t) RPC_U32(&msg, 0U);
-    }
-    if (commit != NULL)
-    {
-        *commit = (uint32_t) RPC_U32(&msg, 4U);
-    }
-}
-
 /* IDL: E8 V2X_BUILD_INFO(UO32 version, UO32 commit) #30 ^API_HAS_V2X */
 sc_err_t sc_seco_v2x_build_info(sc_ipc_t ipc, uint32_t *version,
     uint32_t *commit)
@@ -560,6 +535,184 @@ sc_err_t sc_seco_v2x_build_info(sc_ipc_t ipc, uint32_t *version,
 
     /* Return result */
     return err;
+}
+
+/* IDL: E8 SET_MONO_COUNTER_PARTITION_HSM(UIO16 she, UIO16 hsm) #32 ^API_HAS_V2X */
+sc_err_t sc_seco_set_mono_counter_partition_hsm(sc_ipc_t ipc, uint16_t *she,
+    uint16_t *hsm)
+{
+    sc_rpc_msg_t msg;
+    sc_err_t err;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 2U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
+    RPC_FUNC(&msg) = U8(SECO_FUNC_SET_MONO_COUNTER_PARTITION_HSM);
+
+    /* Fill in send message */
+    RPC_U16(&msg, 0U) = U16(*she);
+    RPC_U16(&msg, 2U) = U16(*hsm);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out result */
+    err = (sc_err_t) RPC_R8(&msg);
+
+    /* Copy out receive message */
+    *she = (uint16_t) RPC_U16(&msg, 0U);
+    *hsm = (uint16_t) RPC_U16(&msg, 2U);
+
+    /* Return result */
+    return err;
+}
+
+/* IDL: E8 FIPS_INFO(UO8 cert, UO8 mode) #34 ^API_HAS_FIPS */
+sc_err_t sc_seco_fips_info(sc_ipc_t ipc, seco_fips_info_t *cert,
+    seco_fips_info_t *mode)
+{
+    sc_rpc_msg_t msg;
+    sc_err_t err;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 1U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
+    RPC_FUNC(&msg) = U8(SECO_FUNC_FIPS_INFO);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out result */
+    err = (sc_err_t) RPC_R8(&msg);
+
+    /* Copy out receive message */
+    if (cert != NULL)
+    {
+        *cert = (seco_fips_info_t) RPC_U8(&msg, 0U);
+    }
+    if (mode != NULL)
+    {
+        *mode = (seco_fips_info_t) RPC_U8(&msg, 1U);
+    }
+
+    /* Return result */
+    return err;
+}
+
+/* IDL: E8 SET_FIPS_MODE(UI8 mode, UO32 reason) #29 ^API_HAS_FIPS */
+sc_err_t sc_seco_set_fips_mode(sc_ipc_t ipc, uint8_t mode, uint32_t *reason)
+{
+    sc_rpc_msg_t msg;
+    sc_err_t err;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 2U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
+    RPC_FUNC(&msg) = U8(SECO_FUNC_SET_FIPS_MODE);
+
+    /* Fill in send message */
+    RPC_U8(&msg, 0U) = U8(mode);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out result */
+    err = (sc_err_t) RPC_R8(&msg);
+
+    /* Copy out receive message */
+    if (reason != NULL)
+    {
+        *reason = (uint32_t) RPC_U32(&msg, 0U);
+    }
+
+    /* Return result */
+    return err;
+}
+
+/* IDL: E8 FIPS_DEGRADE(UI64 addr, UO32 status) #35 ^API_HAS_FIPS */
+sc_err_t sc_seco_fips_degrade(sc_ipc_t ipc, sc_faddr_t addr, uint32_t *status)
+{
+    sc_rpc_msg_t msg;
+    sc_err_t err;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 3U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
+    RPC_FUNC(&msg) = U8(SECO_FUNC_FIPS_DEGRADE);
+
+    /* Fill in send message */
+    RPC_U32(&msg, 0U) = U32(addr >> 32ULL);
+    RPC_U32(&msg, 4U) = U32(addr);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out result */
+    err = (sc_err_t) RPC_R8(&msg);
+
+    /* Copy out receive message */
+    if (status != NULL)
+    {
+        *status = (uint32_t) RPC_U32(&msg, 0U);
+    }
+
+    /* Return result */
+    return err;
+}
+
+/* IDL: E8 FIPS_KEY_ZERO(UI64 addr) #31 ^API_HAS_FIPS */
+sc_err_t sc_seco_fips_key_zero(sc_ipc_t ipc, sc_faddr_t addr)
+{
+    sc_rpc_msg_t msg;
+    sc_err_t err;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 3U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
+    RPC_FUNC(&msg) = U8(SECO_FUNC_FIPS_KEY_ZERO);
+
+    /* Fill in send message */
+    RPC_U32(&msg, 0U) = U32(addr >> 32ULL);
+    RPC_U32(&msg, 4U) = U32(addr);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out result */
+    err = (sc_err_t) RPC_R8(&msg);
+
+    /* Return result */
+    return err;
+}
+
+/* IDL: R0 BUILD_INFO(UO32 version, UO32 commit) #16 */
+void sc_seco_build_info(sc_ipc_t ipc, uint32_t *version, uint32_t *commit)
+{
+    sc_rpc_msg_t msg;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 1U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
+    RPC_FUNC(&msg) = U8(SECO_FUNC_BUILD_INFO);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out receive message */
+    if (version != NULL)
+    {
+        *version = (uint32_t) RPC_U32(&msg, 0U);
+    }
+    if (commit != NULL)
+    {
+        *commit = (uint32_t) RPC_U32(&msg, 4U);
+    }
 }
 
 /* IDL: E8 CHIP_INFO(UO16 lc, UO16 monotonic, UO32 uid_l, UO32 uid_h) #17 */
@@ -735,94 +888,6 @@ sc_err_t sc_seco_set_mono_counter_partition(sc_ipc_t ipc, uint16_t *she)
 
     /* Copy out receive message */
     *she = (uint16_t) RPC_U16(&msg, 0U);
-
-    /* Return result */
-    return err;
-}
-
-/* IDL: E8 SET_MONO_COUNTER_PARTITION_HSM(UIO16 she, UIO16 hsm) #32 ^API_HAS_V2X */
-sc_err_t sc_seco_set_mono_counter_partition_hsm(sc_ipc_t ipc, uint16_t *she,
-    uint16_t *hsm)
-{
-    sc_rpc_msg_t msg;
-    sc_err_t err;
-
-    /* Fill in header */
-    RPC_VER(&msg) = SC_RPC_VERSION;
-    RPC_SIZE(&msg) = 2U;
-    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
-    RPC_FUNC(&msg) = U8(SECO_FUNC_SET_MONO_COUNTER_PARTITION_HSM);
-
-    /* Fill in send message */
-    RPC_U16(&msg, 0U) = U16(*she);
-    RPC_U16(&msg, 2U) = U16(*hsm);
-
-    /* Call RPC */
-    sc_call_rpc(ipc, &msg, SC_FALSE);
-
-    /* Copy out result */
-    err = (sc_err_t) RPC_R8(&msg);
-
-    /* Copy out receive message */
-    *she = (uint16_t) RPC_U16(&msg, 0U);
-    *hsm = (uint16_t) RPC_U16(&msg, 2U);
-
-    /* Return result */
-    return err;
-}
-
-/* IDL: E8 SET_FIPS_MODE(UI8 mode, UO32 reason) #29 */
-sc_err_t sc_seco_set_fips_mode(sc_ipc_t ipc, uint8_t mode, uint32_t *reason)
-{
-    sc_rpc_msg_t msg;
-    sc_err_t err;
-
-    /* Fill in header */
-    RPC_VER(&msg) = SC_RPC_VERSION;
-    RPC_SIZE(&msg) = 2U;
-    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
-    RPC_FUNC(&msg) = U8(SECO_FUNC_SET_FIPS_MODE);
-
-    /* Fill in send message */
-    RPC_U8(&msg, 0U) = U8(mode);
-
-    /* Call RPC */
-    sc_call_rpc(ipc, &msg, SC_FALSE);
-
-    /* Copy out result */
-    err = (sc_err_t) RPC_R8(&msg);
-
-    /* Copy out receive message */
-    if (reason != NULL)
-    {
-        *reason = (uint32_t) RPC_U32(&msg, 0U);
-    }
-
-    /* Return result */
-    return err;
-}
-
-/* IDL: E8 FIPS_KEY_ZERO(UI64 addr) #31 */
-sc_err_t sc_seco_fips_key_zero(sc_ipc_t ipc, sc_faddr_t addr)
-{
-    sc_rpc_msg_t msg;
-    sc_err_t err;
-
-    /* Fill in header */
-    RPC_VER(&msg) = SC_RPC_VERSION;
-    RPC_SIZE(&msg) = 3U;
-    RPC_SVC(&msg) = U8(SC_RPC_SVC_SECO);
-    RPC_FUNC(&msg) = U8(SECO_FUNC_FIPS_KEY_ZERO);
-
-    /* Fill in send message */
-    RPC_U32(&msg, 0U) = U32(addr >> 32ULL);
-    RPC_U32(&msg, 4U) = U32(addr);
-
-    /* Call RPC */
-    sc_call_rpc(ipc, &msg, SC_FALSE);
-
-    /* Copy out result */
-    err = (sc_err_t) RPC_R8(&msg);
 
     /* Return result */
     return err;

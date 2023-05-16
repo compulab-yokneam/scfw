@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 NXP
+ * Copyright 2019-2022 NXP
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -152,12 +152,13 @@ void V2X_MU_Config(uint8_t mu, sc_rm_spa_t sa, sc_rm_did_t did);
  * This function notifies V2X of an MU power off.
  *
  * @param[in]     mu          index of MU
+ * @param[in]     forced      1=release resources
  *
  * Called by the Resource Manager to tell V2X MU is being powered off.
  *
  * See the SECO API Reference Guide for more info.
  */
-void V2X_MU_PowerDown(uint8_t mu);
+void V2X_MU_PowerDown(uint8_t mu, uint8_t forced);
 
 /*!
  * This function starts the random number generators.
@@ -167,6 +168,18 @@ void V2X_MU_PowerDown(uint8_t mu);
  * See the SECO API Reference Guide for more info.
  */
 sc_v2x_rng_stat_t V2X_StartRNG(void);
+
+/*!
+ * This function forces V2X into an aborted state.
+ */
+void V2X_Abort(void);
+
+/*!
+ * This function returns the V2X abort state.
+ *
+ * @return Returns the state.
+ */
+sc_bool_t V2X_IsAborted(void);
 
 /*!
  * @brief V2X MU IRQ handler.

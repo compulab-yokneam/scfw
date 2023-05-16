@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -713,7 +713,7 @@ void misc_get_button_status(sc_rm_pt_t caller_pt, sc_bool_t *status)
 /*--------------------------------------------------------------------------*/
 sc_err_t misc_rompatch_checksum(sc_rm_pt_t caller_pt, uint32_t *checksum)
 {
-    soc_rompatch_checksum(checksum, OTP_ROM_PATCH_SIZE
+    soc_rompatch_checksum(SC_PATCH_ID_SCU, checksum, OTP_ROM_PATCH_SIZE
         + OTP_V2X_PATCH_SIZE);
 
     return SC_ERR_NONE;

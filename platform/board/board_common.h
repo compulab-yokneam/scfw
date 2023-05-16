@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **
-**     Copyright 2018-2019 NXP
+**     Copyright 2018-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -110,6 +110,8 @@ void board_monitor(void);
 
 /*!
  * Shim for exit()
+ *
+ * @param[in]     status        passed to exit()
  */
 void board_exit(int32_t status);
 
@@ -137,6 +139,8 @@ void board_ddr_dqs2dq_sync(void);
 
 /*!
  * Conditional printf
+ *
+ * @param[in]     fmt           passed to printf()
  */
 void board_printf(const char *fmt, ...);
 

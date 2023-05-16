@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -62,6 +62,9 @@
 #include "ss/base/v1/ss.h"
 #endif
 #include "drivers/sysctr/fsl_sysctr.h"
+#ifdef HAS_SECO
+#include "drivers/seco/fsl_seco.h"
+#endif
 
 /* Local Defines */
 
@@ -1497,6 +1500,60 @@ sc_err_t pm_reset(sc_rm_pt_t caller_pt, sc_pm_reset_type_t type)
 }
 
 /*--------------------------------------------------------------------------*/
+/* Reset system to the specified stage                                      */
+/*--------------------------------------------------------------------------*/
+sc_err_t pm_reset_stage(sc_rm_pt_t caller_pt, sc_pm_reset_stage_t stage)
+{
+    sc_err_t err = SC_ERR_NONE;
+    
+    /* Bounds check */
+    BOUND_PT(caller_pt);
+
+    /* Check permissions */
+    SYSTEM(caller_pt);
+
+#ifdef HAS_SECO
+    uint8_t state;
+
+    /* Set stage */
+    switch (stage)
+    {
+        case SC_PM_RESET_STAGE_PRIMARY : /* primary */
+            state = SECO_BOOT_PRIMARY;
+            break;
+        case SC_PM_RESET_STAGE_SECONDARY : /* secondary */
+            state = SECO_BOOT_SECONDARY;
+            break;
+        case SC_PM_RESET_STAGE_RECOVERY : /* recovery */
+            state = SECO_BOOT_RECOVERY;
+            break;
+        case SC_PM_RESET_STAGE_SERIAL : /* sdp */
+            state = SECO_BOOT_SERIAL;
+            break;
+        default :
+            err = SC_ERR_PARM;
+            break;
+    }
+
+    /* Set boot stage */
+    if (err == SC_ERR_NONE)
+    {
+        SECO_SetBootState(state);
+        err = seco_err;
+    }
+#endif
+
+    /* Do reset */
+    if (err == SC_ERR_NONE)
+    {
+        err = board_reset(SC_PM_RESET_TYPE_WARM,
+            SC_PM_RESET_REASON_BOOT_STAGE, caller_pt);
+    }
+
+    return err;
+}
+
+/*--------------------------------------------------------------------------*/
 /* Reboot a partition                                                       */
 /*--------------------------------------------------------------------------*/
 sc_err_t pm_reboot_part(sc_rm_pt_t caller_pt, sc_rm_pt_t pt,
@@ -1593,7 +1650,7 @@ sc_err_t pm_reboot_continue(sc_rm_pt_t caller_pt, sc_rm_pt_t pt)
 }
 
 /*--------------------------------------------------------------------------*/
-/* Indicate okay to conntinue reboot                                        */
+/* Indicate okay to continue reboot                                         */
 /*--------------------------------------------------------------------------*/
 void pm_reboot_continue_all(void)
 {

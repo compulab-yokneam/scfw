@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -68,6 +68,7 @@
 #define SC_IMG_TYPE_RETURN          0x12U   /* Signed field return message */
 #define SC_IMG_TYPE_PATCH           0x13U   /* Signed patch message */
 #define SC_IMG_TYPE_FIPSZERO        0x14U   /* FIPS zero message */
+#define SC_IMG_TYPE_FIPSDEG         0x15U   /* FIPS cluster degrade */
 #define SC_IMG_TYPE_ALL             0xFFU   /* All images */
 
 #define SC_BD_FLAGS_NOT_SECURE      16U

@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **
-**     Copyright 2019-2020 NXP
+**     Copyright 2019-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -83,6 +83,15 @@
 #define SC_SECO_RNG_STAT_READY          2U  /*!< Initialized */
 /** @} */
 
+/*!
+ * @name Defines for seco_fips_mode_t
+ */
+/** @{ */
+#define SC_SECO_FIPS_INFO_NONE          0U  /*!< None */
+#define SC_SECO_FIPS_INFO_SECO_ONLY     1U  /*!< SECO yes, V2X no */
+#define SC_SECO_FIPS_INFO_SECO_V2X      2U  /*!< Both SECO and V2X yes */
+/** @} */
+
 /* Types */
 
 /*!
@@ -94,6 +103,11 @@ typedef uint8_t sc_seco_auth_cmd_t;
  * This type is used to return the RNG initialization status.
  */
 typedef uint32_t sc_seco_rng_stat_t;
+
+/*!
+ * This type is used to return FIPS info.
+ */
+typedef uint8_t seco_fips_info_t;
 
 /* Functions */
 
@@ -635,20 +649,9 @@ sc_err_t sc_seco_get_mp_sign(sc_ipc_t ipc, sc_faddr_t msg_addr,
 /** @} */
 
 /*!
- * @name Debug Functions
+ * @name V2X Functions
  * @{
  */
-
-/*!
- * This function is used to return the SECO FW build info.
- *
- * @param[in]     ipc         IPC handle
- * @param[out]    version     pointer to return build number
- * @param[out]    commit      pointer to return commit ID (git SHA-1)
- */
-/* IDL: R0 BUILD_INFO(UO32 version, UO32 commit) #16 */
-void sc_seco_build_info(sc_ipc_t ipc, uint32_t *version,
-    uint32_t *commit);
 
 /*!
  * This function is used to return the V2X FW build info.
@@ -667,6 +670,188 @@ void sc_seco_build_info(sc_ipc_t ipc, uint32_t *version,
  */
 /* IDL: E8 V2X_BUILD_INFO(UO32 version, UO32 commit) #30 ^API_HAS_V2X */
 sc_err_t sc_seco_v2x_build_info(sc_ipc_t ipc, uint32_t *version,
+    uint32_t *commit);
+
+/*!
+ * This function partitions the monotonic counter. Only the owner of the
+ * SC_R_SYSTEM resource or a partition with access permissions to
+ * SC_R_SYSTEM can do this. This function supports V2X HSM.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[in,out] she         pointer to number of SHE bits
+ * @param[in,out] hsm         pointer to number of HSM bits
+ *
+ * SECO uses an OTP monotonic counter to protect the SHE and HSM key-stores from
+ * roll-back attack. This command is used by the SCU to define the number of
+ * monotonic counter bits allocated to the SHE use. Two monotonic counter bits
+ * are used to store this information while the remaining bits are allocated to
+ * the HSM user. A third partition is created to dedicate a monotonic counter
+ * to the V2X security enclave. The V2X subsystem needs a monotonic counter for
+ * the same purpose as SECO since HSM is supported in V2X. This command must be
+ * sent before a SHE or HSM key stores are created in the system, otherwise the
+ * following default configuration is applied.
+ *
+ * - Total monotonic counter bits: 1920
+ * - SHE number of bits = 300
+ * - HSM number of bits = 808 
+ * - V2X number of bits = 1920 - 300 - 2 - 808 - 2 = 808
+ *
+ * Returns the actual number of SHE/HSM bits via pointer.
+ *
+ * If the partition has been already configured, any attempt to re-configure
+ * the partition to a different value will result in a failure response.
+ *
+ * @return Returns and error code (SC_ERR_NONE = success).
+ *
+ * Return errors codes:
+ * - SC_ERR_UNAVAILABLE if SECO not available,
+ * - SC_ERR_NOACCESS if caller does not have SC_R_SYSTEM access
+ * - SC_ERR_IPC if SECO response has bad header tag or size,
+ * - SC_ERR_VERSION if SECO response has bad version,
+ * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * See the <em>SECO API Reference Guide</em> for more info.
+ */
+/* IDL: E8 SET_MONO_COUNTER_PARTITION_HSM(UIO16 she, UIO16 hsm) #32 ^API_HAS_V2X */
+sc_err_t sc_seco_set_mono_counter_partition_hsm(sc_ipc_t ipc,
+    uint16_t *she, uint16_t *hsm);
+
+/** @} */
+
+/*!
+ * @name FIPS Functions
+ * @{
+ */
+
+/*!
+ * This function is used to return FIPS info.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[out]    cert        pointer to return the FIPS certification
+ * @param[out]    mode        pointer to return the FIPS mode
+ *
+ * @return Returns an error code (SC_ERR_NONE = success).
+ *
+ * Return errors codes:
+ * - SC_ERR_NOTFOUND if FIPS not available,
+ */
+/* IDL: E8 FIPS_INFO(UO8 cert, UO8 mode) #34 ^API_HAS_FIPS */
+sc_err_t sc_seco_fips_info(sc_ipc_t ipc, seco_fips_info_t *cert,
+    seco_fips_info_t *mode);
+
+/*!
+ * This function configures the SECO in FIPS mode. Only the owner of the
+ * SC_R_SYSTEM resource or a partition with access permissions to
+ * SC_R_SYSTEM can do this.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[in]     mode        FIPS mode
+ * @param[out]    reason      pointer to return failure reason
+ *
+ * This function permanently configures the SECO in FIPS approved mode. It
+ * is supported on devices that support setting fuses to enable FIPS mode
+ * (e.g. i.MX8QXP). Devices that set fuses to disable FIPS mode should use
+ * sc_seco_fips_degrade() instead. When in FIPS approved mode the following
+ * services will be disabled and receive a failure response:
+ *
+ * - Encrypted boot is not supported
+ * - Attestation is not supported
+ * - Manufacturing protection is not supported
+ * - DTCP load
+ * - SHE services are not supported
+ * - Assign JR is not supported (all JRs owned by SECO)
+ *
+ * @return Returns and error code (SC_ERR_NONE = success).
+ *
+ * Return errors codes:
+ * - SC_ERR_UNAVAILABLE if SECO not available,
+ * - SC_ERR_NOACCESS if caller does not have SC_R_SYSTEM access
+ * - SC_ERR_IPC if SECO response has bad header tag or size,
+ * - SC_ERR_VERSION if SECO response has bad version,
+ * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * See the <em>SECO API Reference Guide</em> for more info.
+ */
+/* IDL: E8 SET_FIPS_MODE(UI8 mode, UO32 reason) #29 ^API_HAS_FIPS */
+sc_err_t sc_seco_set_fips_mode(sc_ipc_t ipc, uint8_t mode, uint32_t *reason);
+
+/*!
+ * This function securely degrades the SECO and/or V2X from FIPS to non-FIPS
+ * modes. Only the owner of the SC_R_SYSTEM resource or a partition with
+ * access permissions to SC_R_SYSTEM can do this.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[in]     addr        address of message block
+ * @param[out]    status      pointer to return status
+ *
+ * Note \a addr must be a pointer to a signed message block.
+ *
+ * It is currently supported only on devices that are FIPS enabled and support
+ * setting fuses to disable FIPS mode (e.g. i.MX8DXL B0). Devices that support
+ * fuse programming to enable FIPS mode should use sc_seco_set_fips_mode()
+ * instead.
+ *
+ * Disabling FIPS mode involves burning a fuse, so is not reversible. Please
+ * note that this function is handled by SECO for all targets and doesn't
+ * authorize degrading only SECO (accepts degrading SECO and V2X together,
+ * or degrading only V2X).
+ *
+ * @return Returns and error code (SC_ERR_NONE = success).
+ *
+ * Return errors codes:
+ * - SC_ERR_UNAVAILABLE if SECO not available,
+ * - SC_ERR_NOACCESS if caller does not have SC_R_SYSTEM access
+ * - SC_ERR_IPC if SECO response has bad header tag or size,
+ * - SC_ERR_VERSION if SECO response has bad version,
+ * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * See the <em>SECO API Reference Guide</em> for more info.
+ */
+/* IDL: E8 FIPS_DEGRADE(UI64 addr, UO32 status) #35 ^API_HAS_FIPS */
+sc_err_t sc_seco_fips_degrade(sc_ipc_t ipc, sc_faddr_t addr,
+    uint32_t *status);
+
+/*!
+ * This function will securely zeroize all plaintext secret and private
+ * cryptographic keys and CSPs within the FIPS module.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[in]     addr        address of message block
+ *
+ * @return Returns and error code (SC_ERR_NONE = success).
+ *
+ * Return errors codes:
+ * - SC_ERR_UNAVAILABLE if SECO not available,
+ * - SC_ERR_IPC if SECO response has bad header tag or size,
+ * - SC_ERR_VERSION if SECO response has bad version,
+ * - Others, see the [Security Service Detailed Description](\ref seco_err) section
+ *
+ * Note \a addr must be a pointer to a signed message block.
+ *
+ * This function is effective when the part is configured in FIPS approved
+ * mode only, no effects otherwise.
+ *
+ * See the <em>SECO API Reference Guide</em> for more info.
+ */
+/* IDL: E8 FIPS_KEY_ZERO(UI64 addr) #31 ^API_HAS_FIPS */
+sc_err_t sc_seco_fips_key_zero(sc_ipc_t ipc, sc_faddr_t addr);
+
+/** @} */
+
+/*!
+ * @name Debug Functions
+ * @{
+ */
+
+/*!
+ * This function is used to return the SECO FW build info.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[out]    version     pointer to return build number
+ * @param[out]    commit      pointer to return commit ID (git SHA-1)
+ */
+/* IDL: R0 BUILD_INFO(UO32 version, UO32 commit) #16 */
+void sc_seco_build_info(sc_ipc_t ipc, uint32_t *version,
     uint32_t *commit);
 
 /*!
@@ -831,109 +1016,6 @@ sc_err_t sc_seco_patch(sc_ipc_t ipc, sc_faddr_t addr);
  */
 /* IDL: E8 SET_MONO_COUNTER_PARTITION(UIO16 she) #28 ^API_HAS_NO_V2X */
 sc_err_t sc_seco_set_mono_counter_partition(sc_ipc_t ipc, uint16_t *she);
-
-/*!
- * This function partitions the monotonic counter. Only the owner of the
- * SC_R_SYSTEM resource or a partition with access permissions to
- * SC_R_SYSTEM can do this. This function supports V2X HSM.
- *
- * @param[in]     ipc         IPC handle
- * @param[in,out] she         pointer to number of SHE bits
- * @param[in,out] hsm         pointer to number of HSM bits
- *
- * SECO uses an OTP monotonic counter to protect the SHE and HSM key-stores from
- * roll-back attack. This command is used by the SCU to define the number of
- * monotonic counter bits allocated to the SHE use. Two monotonic counter bits
- * are used to store this information while the remaining bits are allocated to
- * the HSM user. A third partition is created to dedicate a monotonic counter
- * to the V2X security enclave. The V2X subsystem needs a monotonic counter for
- * the same purpose as SECO since HSM is supported in V2X. This command must be
- * sent before a SHE or HSM key stores are created in the system, otherwise the
- * following default configuration is applied.
- *
- * - Total monotonic counter bits: 1920
- * - SHE number of bits = 300
- * - HSM number of bits = 808 
- * - V2X number of bits = 1920 - 300 - 2 - 808 - 2 = 808
- *
- * Returns the actual number of SHE/HSM bits via pointer.
- *
- * If the partition has been already configured, any attempt to re-configure
- * the partition to a different value will result in a failure response.
- *
- * @return Returns and error code (SC_ERR_NONE = success).
- *
- * Return errors codes:
- * - SC_ERR_UNAVAILABLE if SECO not available,
- * - SC_ERR_NOACCESS if caller does not have SC_R_SYSTEM access
- * - SC_ERR_IPC if SECO response has bad header tag or size,
- * - SC_ERR_VERSION if SECO response has bad version,
- * - Others, see the [Security Service Detailed Description](\ref seco_err) section
- *
- * See the <em>SECO API Reference Guide</em> for more info.
- */
-/* IDL: E8 SET_MONO_COUNTER_PARTITION_HSM(UIO16 she, UIO16 hsm) #32 ^API_HAS_V2X */
-sc_err_t sc_seco_set_mono_counter_partition_hsm(sc_ipc_t ipc,
-    uint16_t *she, uint16_t *hsm);
-
-/*!
- * This function configures the SECO in FIPS mode. Only the owner of the
- * SC_R_SYSTEM resource or a partition with access permissions to
- * SC_R_SYSTEM can do this.
- *
- * @param[in]     ipc         IPC handle
- * @param[in]     mode        FIPS mode
- * @param[out]    reason      pointer to return failure reason
- *
- * This function permanently configures the SECO in FIPS approved mode. When in
- * FIPS approved mode the following services will be disabled and receive a
- * failure response:
- *
- * - Encrypted boot is not supported
- * - Attestation is not supported
- * - Manufacturing protection is not supported
- * - DTCP load
- * - SHE services are not supported
- * - Assign JR is not supported (all JRs owned by SECO)
- *
- * @return Returns and error code (SC_ERR_NONE = success).
- *
- * Return errors codes:
- * - SC_ERR_UNAVAILABLE if SECO not available,
- * - SC_ERR_NOACCESS if caller does not have SC_R_SYSTEM access
- * - SC_ERR_IPC if SECO response has bad header tag or size,
- * - SC_ERR_VERSION if SECO response has bad version,
- * - Others, see the [Security Service Detailed Description](\ref seco_err) section
- *
- * See the <em>SECO API Reference Guide</em> for more info.
- */
-/* IDL: E8 SET_FIPS_MODE(UI8 mode, UO32 reason) #29 */
-sc_err_t sc_seco_set_fips_mode(sc_ipc_t ipc, uint8_t mode, uint32_t *reason);
-
-/*!
- * This function will securely zeroize all plaintext secret and private
- * cryptographic keys and CSPs within the module.
- *
- * @param[in]     ipc         IPC handle
- * @param[in]     addr        address of message block
- *
- * @return Returns and error code (SC_ERR_NONE = success).
- *
- * Return errors codes:
- * - SC_ERR_UNAVAILABLE if SECO not available,
- * - SC_ERR_IPC if SECO response has bad header tag or size,
- * - SC_ERR_VERSION if SECO response has bad version,
- * - Others, see the [Security Service Detailed Description](\ref seco_err) section
- *
- * Note \a addr must be a pointer to a signed message block.
- *
- * This function is effective when the part is configured in FIPS approved
- * mode only, no effects otherwise.
- *
- * See the <em>SECO API Reference Guide</em> for more info.
- */
-/* IDL: E8 FIPS_KEY_ZERO(UI64 addr) #31 */
-sc_err_t sc_seco_fips_key_zero(sc_ipc_t ipc, sc_faddr_t addr);
 
 /*!
  * This function starts the random number generator.

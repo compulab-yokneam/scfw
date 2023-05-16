@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2021 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -353,22 +353,6 @@ void seco_dispatch(sc_rm_pt_t caller_pt, sc_rsrc_t mu, sc_rpc_msg_t *msg)
                 RPC_SIZE(msg) = 1U;
                 break;
             }
-        /* Dispatch build_info() */
-        case SECO_FUNC_BUILD_INFO :
-            {
-                /* Declare return and parameters */
-                uint32_t version = ((uint32_t) 0U);
-                uint32_t commit = ((uint32_t) 0U);
-
-                /* Call function */
-                seco_build_info(caller_pt, &version, &commit);
-
-                /* Copy in return parameters */
-                RPC_U32(msg, 0U) = U32(version);
-                RPC_U32(msg, 4U) = U32(commit);
-                RPC_SIZE(msg) = 3U;
-                break;
-            }
 #ifdef API_HAS_V2X
         /* Dispatch v2x_build_info() */
         case SECO_FUNC_V2X_BUILD_INFO :
@@ -390,6 +374,123 @@ void seco_dispatch(sc_rm_pt_t caller_pt, sc_rsrc_t mu, sc_rpc_msg_t *msg)
                 break;
             }
 #endif
+#ifdef API_HAS_V2X
+        /* Dispatch set_mono_counter_partition_hsm() */
+        case SECO_FUNC_SET_MONO_COUNTER_PARTITION_HSM :
+            {
+                /* Declare return and parameters */
+                sc_err_t result;
+                uint16_t she = ((uint16_t) RPC_U16(msg, 0U));
+                uint16_t hsm = ((uint16_t) RPC_U16(msg, 2U));
+
+                /* Call function */
+                err = seco_set_mono_counter_partition_hsm(caller_pt, &she,
+                    &hsm);
+                result = err;
+
+                /* Copy in return parameters */
+                RPC_R8(msg) = U8(result);
+                RPC_U16(msg, 0U) = U16(she);
+                RPC_U16(msg, 2U) = U16(hsm);
+                RPC_SIZE(msg) = 2U;
+                break;
+            }
+#endif
+#ifdef API_HAS_FIPS
+        /* Dispatch fips_info() */
+        case SECO_FUNC_FIPS_INFO :
+            {
+                /* Declare return and parameters */
+                sc_err_t result;
+                seco_fips_info_t cert = ((seco_fips_info_t) 0U);
+                seco_fips_info_t mode = ((seco_fips_info_t) 0U);
+
+                /* Call function */
+                err = seco_fips_info(caller_pt, &cert, &mode);
+                result = err;
+
+                /* Copy in return parameters */
+                RPC_R8(msg) = U8(result);
+                RPC_U8(msg, 0U) = U8(cert);
+                RPC_U8(msg, 1U) = U8(mode);
+                RPC_SIZE(msg) = 2U;
+                break;
+            }
+#endif
+#ifdef API_HAS_FIPS
+        /* Dispatch set_fips_mode() */
+        case SECO_FUNC_SET_FIPS_MODE :
+            {
+                /* Declare return and parameters */
+                sc_err_t result;
+                uint8_t mode = ((uint8_t) RPC_U8(msg, 0U));
+                uint32_t reason = ((uint32_t) 0U);
+
+                /* Call function */
+                err = seco_set_fips_mode(caller_pt, mode, &reason);
+                result = err;
+
+                /* Copy in return parameters */
+                RPC_R8(msg) = U8(result);
+                RPC_U32(msg, 0U) = U32(reason);
+                RPC_SIZE(msg) = 2U;
+                break;
+            }
+#endif
+#ifdef API_HAS_FIPS
+        /* Dispatch fips_degrade() */
+        case SECO_FUNC_FIPS_DEGRADE :
+            {
+                /* Declare return and parameters */
+                sc_err_t result;
+                sc_faddr_t addr = ((sc_faddr_t) RPC_U64(msg, 0U));
+                uint32_t status = ((uint32_t) 0U);
+
+                /* Call function */
+                err = seco_fips_degrade(caller_pt, addr, &status);
+                result = err;
+
+                /* Copy in return parameters */
+                RPC_R8(msg) = U8(result);
+                RPC_U32(msg, 0U) = U32(status);
+                RPC_SIZE(msg) = 2U;
+                break;
+            }
+#endif
+#ifdef API_HAS_FIPS
+        /* Dispatch fips_key_zero() */
+        case SECO_FUNC_FIPS_KEY_ZERO :
+            {
+                /* Declare return and parameters */
+                sc_err_t result;
+                sc_faddr_t addr = ((sc_faddr_t) RPC_U64(msg, 0U));
+
+                /* Call function */
+                err = seco_fips_key_zero(caller_pt, addr);
+                result = err;
+
+                /* Copy in return parameters */
+                RPC_R8(msg) = U8(result);
+                RPC_SIZE(msg) = 1U;
+                break;
+            }
+#endif
+        /* Dispatch build_info() */
+        case SECO_FUNC_BUILD_INFO :
+            {
+                /* Declare return and parameters */
+                uint32_t version = ((uint32_t) 0U);
+                uint32_t commit = ((uint32_t) 0U);
+
+                /* Call function */
+                seco_build_info(caller_pt, &version, &commit);
+
+                /* Copy in return parameters */
+                RPC_U32(msg, 0U) = U32(version);
+                RPC_U32(msg, 4U) = U32(commit);
+                RPC_SIZE(msg) = 3U;
+                break;
+            }
         /* Dispatch chip_info() */
         case SECO_FUNC_CHIP_INFO :
             {
@@ -499,62 +600,6 @@ void seco_dispatch(sc_rm_pt_t caller_pt, sc_rsrc_t mu, sc_rpc_msg_t *msg)
                 break;
             }
 #endif
-#ifdef API_HAS_V2X
-        /* Dispatch set_mono_counter_partition_hsm() */
-        case SECO_FUNC_SET_MONO_COUNTER_PARTITION_HSM :
-            {
-                /* Declare return and parameters */
-                sc_err_t result;
-                uint16_t she = ((uint16_t) RPC_U16(msg, 0U));
-                uint16_t hsm = ((uint16_t) RPC_U16(msg, 2U));
-
-                /* Call function */
-                err = seco_set_mono_counter_partition_hsm(caller_pt, &she,
-                    &hsm);
-                result = err;
-
-                /* Copy in return parameters */
-                RPC_R8(msg) = U8(result);
-                RPC_U16(msg, 0U) = U16(she);
-                RPC_U16(msg, 2U) = U16(hsm);
-                RPC_SIZE(msg) = 2U;
-                break;
-            }
-#endif
-        /* Dispatch set_fips_mode() */
-        case SECO_FUNC_SET_FIPS_MODE :
-            {
-                /* Declare return and parameters */
-                sc_err_t result;
-                uint8_t mode = ((uint8_t) RPC_U8(msg, 0U));
-                uint32_t reason = ((uint32_t) 0U);
-
-                /* Call function */
-                err = seco_set_fips_mode(caller_pt, mode, &reason);
-                result = err;
-
-                /* Copy in return parameters */
-                RPC_R8(msg) = U8(result);
-                RPC_U32(msg, 0U) = U32(reason);
-                RPC_SIZE(msg) = 2U;
-                break;
-            }
-        /* Dispatch fips_key_zero() */
-        case SECO_FUNC_FIPS_KEY_ZERO :
-            {
-                /* Declare return and parameters */
-                sc_err_t result;
-                sc_faddr_t addr = ((sc_faddr_t) RPC_U64(msg, 0U));
-
-                /* Call function */
-                err = seco_fips_key_zero(caller_pt, addr);
-                result = err;
-
-                /* Copy in return parameters */
-                RPC_R8(msg) = U8(result);
-                RPC_SIZE(msg) = 1U;
-                break;
-            }
         /* Dispatch start_rng() */
         case SECO_FUNC_START_RNG :
             {

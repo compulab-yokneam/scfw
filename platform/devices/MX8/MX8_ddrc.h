@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **
-**     Copyright 2018-2019 NXP
+**     Copyright 2018-2021 NXP
 **     All rights reserved.
 **
 **     Redistribution and use in source and binary forms, with or without modification,

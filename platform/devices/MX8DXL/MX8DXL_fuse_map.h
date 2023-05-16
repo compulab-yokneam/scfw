@@ -7,7 +7,7 @@
 **     Abstract:
 **         CMSIS Peripheral Access Layer for MX8DXL
 **
-**     Copyright 2017-2018 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -86,13 +86,15 @@
 #define OTP_AP_2_0_DIS              OTP_GET_FUSE_STATE(0x006U,  0U, 0x00000001U)
 #define OTP_AP_2_1_DIS              OTP_GET_FUSE_STATE(0x006U,  1U, 0x00000001U)
 #define OTP_AP_2_MAX_FREQ           OTP_GET_FUSE_STATE(0x006U,  8U, 0x0000000FU)
-#define OTP_TEMP_GRADE              OTP_GET_FUSE_STATE(0x006U, 12U, 0x00000003U)
+#define OTP_TEMP_GRADE              OTP_GET_FUSE_STATE(0x006U, 12U, 0x00000007U)
 #define OTP_DSP_DIS                 OTP_GET_FUSE_STATE(0x008U,  0U, 0x00000001U)
 #define OTP_MCU_0_DIS               OTP_GET_FUSE_STATE(0x008U,  1U, 0x00000001U)
 #define OTP_V2X_DIS                 OTP_GET_FUSE_STATE(0x008U,  3U, 0x00000001U)
 #define OTP_PCIE_B_DIS              OTP_GET_FUSE_STATE(0x008U,  5U, 0x00000001U)
 #define OTP_USB2_1_DIS              OTP_GET_FUSE_STATE(0x008U,  8U, 0x00000001U)
 #define OTP_USB2_2_OTG_DIS          OTP_GET_FUSE_STATE(0x008U,  9U, 0x00000001U)
+#define OTP_V2X_FIPS_MODE           OTP_GET_FUSE_STATE(0x008U, 10U, 0x00000001U)                     
+#define OTP_V2X_FIPS_MODE_DIS       OTP_GET_FUSE_STATE(0x008U, 11U, 0x00000001U)                     
 #define OTP_ETH_0_DIS               OTP_GET_FUSE_STATE(0x008U, 12U, 0x00000001U)
 #define OTP_ETH_1_DIS               OTP_GET_FUSE_STATE(0x008U, 13U, 0x00000001U)
 #define OTP_DRC_0_DIS               OTP_GET_FUSE_STATE(0x009U,  8U, 0x0000000FU)
@@ -174,6 +176,8 @@
 #define OTP_DBGEN_SPNIDEN           OTP_GET_FUSE_STATE(0x016U, 24U, 0x000000FFU)
 
 #define OTP_DPLL_CALIB_V2           OTP_GET_FUSE_STATE(0x01BU,  3U, 0x00000001U)
+#define OTP_OSC200M_TRIM_208M       OTP_GET_FUSE_STATE(0x01BU, 13U, 0x00000001U)
+#define OTP_TSENSE_STRESS_TRIM      OTP_GET_FUSE_STATE(0x01BU, 14U, 0x00000001U)
 
 #define OTP_OSC_CAP_TRIM            OTP_GET_FUSE_STATE(0x01EU,  0U, 0x0000000FU)
 #define OTP_TMP_MON_TRM_LO          OTP_GET_FUSE_STATE(0x01EU,  4U, 0x0000003FU)
@@ -203,6 +207,9 @@
 #define OTP_CSI_0_RCAL_TRIM         OTP_GET_FUSE_STATE(0x069U,  8U, 0x00000003U)
 #define OTP_DSI_0_RCAL_TRIM         OTP_GET_FUSE_STATE(0x067U, 20U, 0x00000003U)
 #define OTP_DSI_1_RCAL_TRIM         OTP_GET_FUSE_STATE(0x067U, 22U, 0x00000003U)
+
+#define OTP_TMP_STRESS_SCU          OTP_GET_FUSE_STATE(0x068U,  0U, 0x0000001FU)
+#define OTP_TMP_STRESS_DRC0         OTP_GET_FUSE_STATE(0x068U,  8U, 0x0000001FU)
 
 #define OTP_TMP_SENS_SCU            OTP_GET_FUSE_STATE(0x06AU,  2U, 0x000003FFU)
 #define OTP_TMP_SENS_3              OTP_GET_FUSE_STATE(0x06AU, 12U, 0x000003FFU)

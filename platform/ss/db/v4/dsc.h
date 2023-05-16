@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **
-**     Copyright (c) 2019-2020 Freescale Semiconductor, Inc.
+**     Copyright 2019-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:

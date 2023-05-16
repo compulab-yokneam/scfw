@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2021 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -74,17 +74,19 @@
 #define SECO_FUNC_GET_MP_KEY 13U /*!< Index for sc_seco_get_mp_key() RPC call */
 #define SECO_FUNC_UPDATE_MPMR 14U /*!< Index for sc_seco_update_mpmr() RPC call */
 #define SECO_FUNC_GET_MP_SIGN 15U /*!< Index for sc_seco_get_mp_sign() RPC call */
-#define SECO_FUNC_BUILD_INFO 16U /*!< Index for sc_seco_build_info() RPC call */
 #define SECO_FUNC_V2X_BUILD_INFO 30U /*!< Index for sc_seco_v2x_build_info() RPC call */
+#define SECO_FUNC_SET_MONO_COUNTER_PARTITION_HSM 32U /*!< Index for sc_seco_set_mono_counter_partition_hsm() RPC call */
+#define SECO_FUNC_FIPS_INFO 34U /*!< Index for sc_seco_fips_info() RPC call */
+#define SECO_FUNC_SET_FIPS_MODE 29U /*!< Index for sc_seco_set_fips_mode() RPC call */
+#define SECO_FUNC_FIPS_DEGRADE 35U /*!< Index for sc_seco_fips_degrade() RPC call */
+#define SECO_FUNC_FIPS_KEY_ZERO 31U /*!< Index for sc_seco_fips_key_zero() RPC call */
+#define SECO_FUNC_BUILD_INFO 16U /*!< Index for sc_seco_build_info() RPC call */
 #define SECO_FUNC_CHIP_INFO 17U /*!< Index for sc_seco_chip_info() RPC call */
 #define SECO_FUNC_ENABLE_DEBUG 18U /*!< Index for sc_seco_enable_debug() RPC call */
 #define SECO_FUNC_GET_EVENT 19U /*!< Index for sc_seco_get_event() RPC call */
 #define SECO_FUNC_FUSE_WRITE 20U /*!< Index for sc_seco_fuse_write() RPC call */
 #define SECO_FUNC_PATCH 21U /*!< Index for sc_seco_patch() RPC call */
 #define SECO_FUNC_SET_MONO_COUNTER_PARTITION 28U /*!< Index for sc_seco_set_mono_counter_partition() RPC call */
-#define SECO_FUNC_SET_MONO_COUNTER_PARTITION_HSM 32U /*!< Index for sc_seco_set_mono_counter_partition_hsm() RPC call */
-#define SECO_FUNC_SET_FIPS_MODE 29U /*!< Index for sc_seco_set_fips_mode() RPC call */
-#define SECO_FUNC_FIPS_KEY_ZERO 31U /*!< Index for sc_seco_fips_key_zero() RPC call */
 #define SECO_FUNC_START_RNG 22U /*!< Index for sc_seco_start_rng() RPC call */
 #define SECO_FUNC_SAB_MSG 23U /*!< Index for sc_seco_sab_msg() RPC call */
 #define SECO_FUNC_CAAM_TD_CONFIG 33U /*!< Index for sc_seco_caam_td_config() RPC call */

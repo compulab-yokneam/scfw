@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -56,7 +56,7 @@
  */
 /** @{ */
 #define SCFW_API_VERSION_MAJOR  1U
-#define SCFW_API_VERSION_MINOR  29U
+#define SCFW_API_VERSION_MINOR  31U
 /** @} */
 
 /*! RPC version */
@@ -122,6 +122,7 @@
 #define U16(X)      ((uint16_t) (X))
 #define U32(X)      ((uint32_t) (X))
 #define U64(X)      ((uint64_t) (X))
+#define F32(X)      ((float32_t) (X))
 
 #define PTR_I8(X)   ((int8_t *) (X))
 #define PTR_I16(X)  ((int16_t *) (X))

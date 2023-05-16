@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -74,7 +74,7 @@
 #define SS_MAX_CLK      35U //!< Max number of clocks per subsystem
 #define SS_MAX_PLL      3U  //!< Max number of PLLs per subsystem
 
-#define SS_MAX_PM_CLKS  5U
+#define SS_MAX_PM_CLKS  5U  //!< Max number of clocks per resource
 
 /*! Define to indicate invalid power domains and clocks */
 #define NV              ((uint8_t) UINT8_MAX)
@@ -87,9 +87,9 @@
     .ss_idx = U8(X)              \
 }
 
-#define SS_I1           0x8001U
+#define SS_I1           0x8001U         //!< Use SS index marker
 
-#define XNFO_DL         {0U, 0U}
+#define XNFO_DL         {0U, 0U}        //!< End of XINFO marker
 
 #ifdef DISABLE_LPCG_AT_PD_PUP
 #define LPCG_INFO                       \
@@ -504,7 +504,7 @@ typedef sc_bool_t (*ss_dsc_l2irq_handler)(sc_dsc_t dsc, uint32_t irqIndex);
  * @param[in]     ss          subsystem to initialize
  * @param[in]     api_phase   flag indicating phase
  *
- * There are two phases to subsystem initialization.  The fist phase is
+ * There are two phases to subsystem initialization. The fist phase is
  * the API phase (\a api_phase = SC_TRUE) and initializes all of the subsystem
  * interface data structures. The second phase is the HW phase and this
  * initializes the SS hardware. Both are called from main() only.
@@ -776,6 +776,8 @@ void ss_rdc_set_peripheral(ss_ridx_t rsrc_idx, sc_bool_t valid, sc_bool_t lock,
  * @param[in]     rmsg        IEE config
  * @param[in]     new_start   new 64-bit start address
  * @param[in]     new_end     new 64-bit end address
+ *
+ * @return Returns an error code (SC_ERR_NONE = success).
  */
 /* IDL: SS_RDC_SET_MEMORY() */
 sc_err_t ss_rdc_set_memory(sc_faddr_t start, sc_faddr_t end, sc_bool_t valid,
@@ -860,6 +862,11 @@ void ss_irq_trigger(sc_irq_group_t group, uint32_t irq, sc_rm_pt_t pt);
 
 /*!
  * This function dumps the state of a subsystem.
+ *
+ * @param[in]     ss          subsystem to dump
+ * @param[in]     xrdc        dump XRDC flag
+ * @param[in]     dsc         dump DSC flag
+ * @param[in]     clk         dump clock flag
  */
 /* IDL: SS_DUMP() */
 void ss_dump(sc_sub_t ss, sc_bool_t xrdc, sc_bool_t dsc, sc_bool_t clk);
@@ -1069,7 +1076,14 @@ sc_bool_t ss_temp_sensor(ss_ridx_t rsrc_idx);
 
 /* Externs */
 
+/*!
+ * External SS entry point arrays.
+ */
 extern const sc_ss_ep_t sc_ss_ep[SC_SUBSYS_LAST + 1U];
+
+/*!
+ * External SS dynamic data.
+ */
 extern ss_base_data_t sc_ss_data[SC_SUBSYS_LAST + 1U];
 
 #endif /* SC_SS_INF_H */

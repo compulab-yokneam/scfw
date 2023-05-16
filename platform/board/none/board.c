@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -523,6 +523,15 @@ void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
     }
 }
 
+#ifdef HAS_V2X
+/*--------------------------------------------------------------------------*/
+/* Report V2X authentication complete state                                 */
+/*--------------------------------------------------------------------------*/
+void board_v2x_auth_state(uint8_t state)
+{
+}
+#endif
+
 /*--------------------------------------------------------------------------*/
 /* Handle SECO/SNVS security violation                                      */
 /*--------------------------------------------------------------------------*/
@@ -609,6 +618,14 @@ sc_err_t board_ioctl(sc_rm_pt_t caller_pt, sc_rsrc_t mu, uint32_t *parm1,
     }
 
     return err;
+}
+
+/*--------------------------------------------------------------------------*/
+/* Board custom monitor command                                             */
+/*--------------------------------------------------------------------------*/
+sc_err_t board_monitor_custom(int argc, char *argv[])
+{
+    return SC_ERR_NONE;
 }
 
 /** @} */

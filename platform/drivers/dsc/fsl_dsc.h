@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, Freescale Semiconductor, Inc.
- * Copyright 2017-2020 NXP
+ * Copyright 2016-2021 NXP
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -82,10 +82,12 @@
 /** @{ */
 #define SC_PM_CLK_MODE_ROM_INIT        0U    /*!< Clock is initialized by ROM */
 #define SC_PM_CLK_MODE_OFF             1U    /*!< Clock is disabled */
-#define SC_PM_CLK_MODE_ON              2U    /*!< Clock is enabled */
-#define SC_PM_CLK_MODE_AUTOGATE_SW     3U    /*!< Clock is in SW autogate mode */
-#define SC_PM_CLK_MODE_AUTOGATE_HW     4U    /*!< Clock is in HW autogate mode */
-#define SC_PM_CLK_MODE_AUTOGATE_SW_HW  5U    /*!< Clock is in SW-HW autogate mode */
+#define SC_PM_CLK_MODE_LP              2U    /*!< Clock is sourced from XTAL */
+#define SC_PM_CLK_MODE_ON              3U    /*!< Clock is enabled */
+#define SC_PM_CLK_MODE_AUTOGATE_SW     4U    /*!< Clock is in SW autogate mode */
+#define SC_PM_CLK_MODE_AUTOGATE_HW     5U    /*!< Clock is in HW autogate mode */
+#define SC_PM_CLK_MODE_AUTOGATE_SW_HW  6U    /*!< Clock is in SW-HW autogate mode */
+
 /** @} */
 
 /*!

@@ -1,6 +1,6 @@
 ## ###################################################################
 ##
-##     Copyright 2019-2020 NXP
+##     Copyright 2019-2021 NXP
 ##
 ##     Redistribution and use in source and binary forms, with or without modification,
 ##     are permitted provided that the following conditions are met:
@@ -178,6 +178,14 @@ ifeq ($(LTO),1)
 	FLAGS += -DLTO
 endif
 
+# Configure log
+ifdef log
+    LOG := $(log)
+endif
+ifdef LOG
+	FLAGS += -DBOARD_LOG_SIZE=$(LOG)
+endif
+
 # Configure tests
 ifdef t
     T := $(t)
@@ -245,6 +253,17 @@ ifeq ($(AC),1)
 	FLAGS += -DAUTOCAL
 endif
 
+# Configure SECO
+ifdef seco
+    SECO := $(seco)
+endif
+ifndef SECO
+    SECO = 1
+endif
+ifeq ($(SECO),0)
+	FLAGS += -DSECO_DISABLE -DV2X_DISABLE
+endif
+
 # Configure manifest
 MANIFEST := $(shell md5sum --status -c MANIFEST 1>&2 2> /dev/null; echo $$?)
 ifeq ($(MANIFEST),1)
@@ -286,6 +305,23 @@ endif
 ifeq ($(D),0)
 ifeq ($(M),1)
 $(error M=1 and D=0 are mutually exclusive)
+endif
+endif
+
+ifdef idle
+    IDLE := $(idle)
+endif
+ifndef idle
+    IDLE = 0
+endif
+ifeq ($(IDLE),1)
+        FLAGS += -DENABLE_IDLE
+endif
+
+# Check config
+ifeq ($(IDLE),1)
+ifeq ($(M),1)
+$(error M=1 and IDLE=1 are mutually exclusive)
 endif
 endif
 
@@ -354,7 +390,7 @@ endif
     WARNS += -Wformat=2 -Wnested-externs
     TEST_CFLAGS := $(CFLAGS)
 else
-    CROSS_COMPILE ?= $(TOOLS)/gcc-arm-none-eabi-*/bin/arm-none-eabi-
+	CROSS_COMPILE ?= $(TOOLS)/gcc-arm-none-eabi-*/bin/arm-none-eabi-
     #GNU GCC
     AS		 = $(CROSS_COMPILE)as
     LD		 = $(CROSS_COMPILE)ld

@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **
-**     Copyright 2018-2019 NXP
+**     Copyright 2018-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -85,6 +85,12 @@
 
 static sc_bool_t ddr_tick_enable = SC_FALSE;
 static sc_bool_t ddr_derate_tick_enable = SC_FALSE;
+
+#ifdef BOARD_LOG_SIZE
+static board_log_t log_data[BOARD_LOG_SIZE];
+static uint32_t log_mode = BOARD_LOG_MODE_INIT;
+static uint32_t log_idx = 0U;
+#endif
 
 /* Global Variables */
 
@@ -216,7 +222,7 @@ void board_wdog_disable(sc_bool_t lp)
             /* Disable the WDOG */
             WDOG32_Deinit(WDOG_SC);
         }
-#endif
+#endif    
 }
 
 /*--------------------------------------------------------------------------*/
@@ -327,5 +333,73 @@ void board_common_tick(uint16_t msec)
 
     /* User tick */
     board_tick(msec);
+}
+
+#ifdef BOARD_LOG_SIZE
+/*--------------------------------------------------------------------------*/
+/* Set log mode                                                             */
+/*--------------------------------------------------------------------------*/
+void board_log_mode(uint32_t mode)
+{
+    log_mode = mode;
+}
+#endif
+
+/*--------------------------------------------------------------------------*/
+/* Write log data                                                           */
+/*--------------------------------------------------------------------------*/
+void board_log_write(uint32_t data0, uint32_t data1)
+{
+#ifdef BOARD_LOG_SIZE
+    /* Log enabled? */
+    if ((log_mode & BOARD_LOG_MODE_ENABLE) != 0U)
+    {
+        /* Store data */
+        log_data[log_idx].timestamp = SYSCTR_GetUsec32();
+        log_data[log_idx].data0 = data0; 
+        log_data[log_idx].data1 = data1; 
+        log_idx++;
+
+        /* Buffer full? */
+        if (log_idx >= BOARD_LOG_SIZE)
+        {
+            log_idx = 0U;
+
+            /* FIFO or STACK mode */
+            if ((log_mode & BOARD_LOG_MODE_FIFO) == 0U)
+            {
+                /* Disable logging */
+                log_mode &= ~BOARD_LOG_MODE_ENABLE;
+            }
+        }
+    }
+#endif
+}
+
+/*--------------------------------------------------------------------------*/
+/* Read log data                                                            */
+/*--------------------------------------------------------------------------*/
+sc_err_t board_log_dump(void)
+{
+#ifdef BOARD_LOG_SIZE
+    for (uint32_t i = 0U; i < BOARD_LOG_SIZE; i++)
+    {
+        /* Calc rolling index */
+        uint32_t idx = (i + log_idx) % BOARD_LOG_SIZE;
+
+        /* Entry written? */
+        if (log_data[idx].timestamp != 0U)
+        {
+            always_print("%duS - 0x%08X 0x%08X\n",
+                log_data[idx].timestamp,
+                log_data[idx].data0,
+                log_data[idx].data1);
+        }
+    }
+
+    return SC_ERR_NONE;
+#else
+    return SC_ERR_NOTFOUND;
+#endif
 }
 

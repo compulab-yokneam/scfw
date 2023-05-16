@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -576,6 +576,34 @@ sc_err_t rm_partition_free(sc_rm_pt_t caller_pt, sc_rm_pt_t pt)
             }
         }
 
+        /* Delete child memory regions */
+        for (m = 0; m < SC_RM_NUM_MEMREG; m++)
+        {
+            /* Owned by this partition? */
+            if (rm_mreg_data[m].owner == pt)
+            {
+                sc_rm_mr_t m_parent = rm_mreg_data[m].parent;
+
+                /* Check parms */
+                SIMU_ASRT(m_parent < SC_RM_NUM_PARTITION,
+                    "bad parent pt");
+
+                if (rm_mreg_data[m].parent == m)
+                {
+                    continue;
+                }
+                
+                if (rm_mreg_data[m_parent].owner == pt)
+                {
+                    (void) rm_memreg_free(SC_PT, m);
+                }
+                if (rm_mreg_data[m_parent].owner == rm_part_data[pt].parent)
+                {
+                    (void) rm_memreg_free(SC_PT, m);
+                }           
+            }
+        }    
+
         /* Return all resources to parent */
         for (r = 0; r < SC_NUM_RSRC; r++)
         {
@@ -628,34 +656,6 @@ sc_err_t rm_partition_free(sc_rm_pt_t caller_pt, sc_rm_pt_t pt)
                 rm_pad_data[n].movable = SC_TRUE;
             }
         }
-
-        /* Delete child memory regions */
-        for (m = 0; m < SC_RM_NUM_MEMREG; m++)
-        {
-            /* Owned by this partition? */
-            if (rm_mreg_data[m].owner == pt)
-            {
-                sc_rm_mr_t m_parent = rm_mreg_data[m].parent;
-
-                /* Check parms */
-                SIMU_ASRT(m_parent < SC_RM_NUM_PARTITION,
-                    "bad parent pt");
-
-                if (rm_mreg_data[m].parent == m)
-                {
-                    continue;
-                }
-                
-                if (rm_mreg_data[m_parent].owner == pt)
-                {
-                    (void) rm_memreg_free(SC_PT, m);
-                }
-                if (rm_mreg_data[m_parent].owner == rm_part_data[pt].parent)
-                {
-                    (void) rm_memreg_free(SC_PT, m);
-                }           
-            }
-        }    
 
         /* Return all remaining memory regions */
         for (m = 0; m < SC_RM_NUM_MEMREG; m++)
@@ -3084,18 +3084,28 @@ sc_err_t rm_partition_create(sc_rm_pt_t caller_pt, sc_rm_pt_t *pt,
     while (idx < rsrc_cnt)
     {
         sc_rsrc_t first = rsrc_lst[idx];
-        sc_rsrc_t last;
 
-        /* Check for range */
-        if ((first & RM_RANGE_MASK) != 0U)
+        /* Check for subsystem */
+        if ((first & RM_SS_MASK) != 0U)
         {
-            first &= ~RM_RANGE_MASK;
-            idx++;
+            FUNC_ERR(rm_set_subsys_rsrc_movable(caller_pt,
+                first & ~RM_SS_MASK, SC_TRUE));
         }
-        last = rsrc_lst[idx];
-        
-        FUNC_ERR(rm_set_resource_movable(caller_pt, first, last,
-            SC_TRUE));
+        else
+        {
+            sc_rsrc_t last;
+
+            /* Check for range */
+            if ((first & RM_RANGE_MASK) != 0U)
+            {
+                first &= ~RM_RANGE_MASK;
+                idx++;
+            }
+            last = rsrc_lst[idx];
+            
+            FUNC_ERR(rm_set_resource_movable(caller_pt, first, last,
+                SC_TRUE));
+        }
 
         idx++;
     }

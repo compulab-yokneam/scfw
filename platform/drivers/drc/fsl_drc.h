@@ -41,6 +41,7 @@
 #include "fsl_device_registers.h"
 
 /* Defines */
+#define DDR_ECC_MODE_EN 0x4U
 
 /* Types */
 
@@ -52,6 +53,9 @@ void ddr_enter_retention(uint32_t total_drc_num, ddrc drc_inst[], ddr_phy drc_ph
 void ddr_exit_retention(uint32_t total_drc_num, const ddrc drc_inst[], const ddr_phy drc_phy_inst[]);
 uint8_t ddrc_mrr(uint32_t ddr_num, uint32_t rank, uint32_t MR_addr);
 void ddrc_mrw(uint32_t ddr_num, uint32_t rank, uint32_t MR_addr, uint32_t MR_data);
+#if (defined(FSL_FEATURE_DDRC_ECC_SUPPORT))
+void ddr_config_ecc(uint32_t total_drc_num, const ddrc drc_inst[], const ddr_phy drc_phy_inst[]);
+#endif
 
 #endif /* DRV_DRC_H */
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, Freescale Semiconductor, Inc.
- * Copyright 2017-2020 NXP
+ * Copyright 2016-2022 NXP
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -143,7 +143,7 @@ void SYSCTR_WakeEnable(uint32_t usec);
  * to generate an IRQ event after the specified number of
  * system counter ticks.
  *
- * @param[in]     usec        number of system counter ticks until the event
+ * @param[in]     ticks       number of system counter ticks until the event
  */
 void SYSCTR_Compare1Enable(uint64_t ticks);
 

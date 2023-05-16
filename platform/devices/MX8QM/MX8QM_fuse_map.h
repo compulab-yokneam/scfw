@@ -7,7 +7,7 @@
 **     Abstract:
 **         CMSIS Peripheral Access Layer for MX8QM
 **
-**     Copyright 2017-2018 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -123,8 +123,6 @@
 #define OTP_DRC_0_DIS               OTP_GET_FUSE_STATE(0x009U,  8U, 0x0000000FU)                     
 #define OTP_DRC_1_DIS               OTP_GET_FUSE_STATE(0x009U, 12U, 0x0000000FU)                     
 #define OTP_CAN_DIS                 OTP_GET_FUSE_STATE(0x00AU,  0U, 0x00000001U)                     
-#define OTP_FIPS_MODE               OTP_GET_FUSE_STATE(0x00AU,  3U, 0x00000001U)                     
-#define OTP_FIPS_MODE_DIS           OTP_GET_FUSE_STATE(0x00AU,  4U, 0x00000001U)                     
 
 /////////////////////////////////////////////////////////////////////////////
 #define OTP_ADM_SECURITY_MSKL       OTP_GET_FUSE_STATE(0x00CU,  0U, 0x0000FFFFU)
@@ -272,8 +270,10 @@
 #define OTP_DSI_1_VOH_D1_TRIM       OTP_GET_FUSE_STATE(0x103U, 25U, 0x00000007U)
 #define OTP_DSI_1_VOH_D0_TRIM       OTP_GET_FUSE_STATE(0x103U, 28U, 0x00000007U)
 
-#define OTP_24MHZ_CL_TUNE_LV        OTP_GET_FUSE_STATE(0x1F0U,  0U, 0x000000FFU)
-#define OTP_24MHZ_CL_TUNE_VALID     OTP_GET_FUSE_STATE(0x1F0U, 31U, 0x00000001U)
+#define OTP_TEMP_GRADE              OTP_GET_FUSE_STATE(0x118U,  0U, 0x00000003U)
+
+#define OTP_24MHZ_CL_TUNE_LV        OTP_GET_FUSE_STATE(0x300U,  0U, 0x000000FFU)
+#define OTP_24MHZ_CL_TUNE_VALID     OTP_GET_FUSE_STATE(0x300U, 31U, 0x00000001U)
 
 #define OTP_TMP_SENS_SCU_OFS        OTP_GET_FUSE_STATE(0x301U,  0U, 0x000000FFU)
 #define OTP_TMP_SENS_AP_0_OFS       OTP_GET_FUSE_STATE(0x301U,  8U, 0x000000FFU)

@@ -8,7 +8,7 @@
 **         Memory operations for MX8
 **
 **     Copyright (c) 1997 - 2015 Freescale Semiconductor, Inc.
-**     Copyright 2017-2018 NXP
+**     Copyright 2016-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:

@@ -8,7 +8,7 @@
 **         CMSIS Peripheral Access Layer for MX8
 **
 **     Copyright (c) 1997 - 2015 Freescale Semiconductor, Inc.
-**     Copyright 2017-2019 NXP
+**     Copyright 2016-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -117,26 +117,28 @@ SECTIONS
      .test25  { */test_pd.o(.text*) */test_pd.o(.rodata*) }
      .test26  { */test_pm.o(.text*) */test_pm.o(.rodata*) }
      .test27  { */test_timer.o(.text*) */test_timer.o(.rodata*) }
-     .test28  { */test_rm.o(.text*) */test_rm.o(.rodata*) }
-     .test29  { */test_misc.o(.text*) */test_misc.o(.rodata*) }
-     .test30  { */test_pad.o(.text*) */test_pad.o(.rodata*) }
-     .test31  { */test_rm2.o(.text*) */test_rm2.o(.rodata*) }
-     .test32  { */test_seco.o(.text*) */test_seco.o(.rodata*) }
-     .test33  { */test_hexdump.o(.text*) */test_hexdump.o(.rodata*) }
-     .test34  { */test_ddr.o(.text*) */test_ddr.o(.rodata*) }
-     .test35  { */test_audio_pll.o(.text*) */test_audio_pll.o(.rodata*) }
-     .test36  { */test_temp.o(.text*) */test_temp.o(.rodata*) }
-     .test37  { */test_uboot.o(.text*) */test_uboot.o(.rodata*) }
-     .test38  { */test_xrdc.o(.text*) */test_xrdc.o(.rodata*) }
-     .test39  { */test_dump.o(.text*) */test_dump.o(.rodata*) }
-     .test40  { */test_rpc.o(.text*) */test_rpc.o(.rodata*) }
+     .test28  { */test_rtc2038.o(.text*) */test_rtc2038.o(.rodata*) }
+     .test29  { */test_rm.o(.text*) */test_rm.o(.rodata*) }
+     .test30  { */test_misc.o(.text*) */test_misc.o(.rodata*) }
+     .test31  { */test_pad.o(.text*) */test_pad.o(.rodata*) }
+     .test32  { */test_rm2.o(.text*) */test_rm2.o(.rodata*) }
+     .test33  { */test_seco.o(.text*) */test_seco.o(.rodata*) }
+     .test34  { */test_hexdump.o(.text*) */test_hexdump.o(.rodata*) }
+     .test35  { */test_ddr.o(.text*) */test_ddr.o(.rodata*) }
+     .test36  { */test_audio_pll.o(.text*) */test_audio_pll.o(.rodata*) }
+     .test37  { */test_temp.o(.text*) */test_temp.o(.rodata*) }
+     .test38  { */test_uboot.o(.text*) */test_uboot.o(.rodata*) }
+     .test39  { */test_xrdc.o(.text*) */test_xrdc.o(.rodata*) }
+     .test40  { */test_dump.o(.text*) */test_dump.o(.rodata*) }
+     .test41  { */test_version.o(.text*) */test_version.o(.rodata*) }
+     .test42  { */test_rpc.o(.text*) */test_rpc.o(.rodata*) }
    } > m_ovl AT> m_ocram
 
   .test_ovly_table :
   {
     . = ALIGN(4);
     __ovly_table = .; 
-        LONG(0x34982933); LONG(0); LONG(40);
+        LONG(0x34982933); LONG(0); LONG(42);
         LONG(ABSOLUTE(ADDR(.test0))); LONG(SIZEOF(.test0)); LONG(LOADADDR(.test0));
         LONG(ABSOLUTE(ADDR(.test1))); LONG(SIZEOF(.test1)); LONG(LOADADDR(.test1));
         LONG(ABSOLUTE(ADDR(.test2))); LONG(SIZEOF(.test2)); LONG(LOADADDR(.test2));
@@ -178,6 +180,8 @@ SECTIONS
         LONG(ABSOLUTE(ADDR(.test38))); LONG(SIZEOF(.test38)); LONG(LOADADDR(.test38));
         LONG(ABSOLUTE(ADDR(.test39))); LONG(SIZEOF(.test39)); LONG(LOADADDR(.test39));
         LONG(ABSOLUTE(ADDR(.test40))); LONG(SIZEOF(.test40)); LONG(LOADADDR(.test40));
+        LONG(ABSOLUTE(ADDR(.test41))); LONG(SIZEOF(.test41)); LONG(LOADADDR(.test41));
+        LONG(ABSOLUTE(ADDR(.test42))); LONG(SIZEOF(.test42)); LONG(LOADADDR(.test42));
         LONG(0); LONG(0); LONG(0);
   } > m_ocram
 

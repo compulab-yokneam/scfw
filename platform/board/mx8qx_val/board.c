@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -1062,6 +1062,13 @@ sc_err_t board_reset(sc_pm_reset_type_t type, sc_pm_reset_reason_t reason,
     {
         /* Request PMIC do a cold reset */
     }
+    else if ((type == SC_PM_RESET_TYPE_WARM)
+        && (reason == SC_PM_RESET_REASON_BOOT_STAGE))
+    {
+        /* Disable WDOG_OUT to prevent bounce of VDD_MAIN */
+        PAD_SetMux(IOMUXD__JTAG_TRST_B, 4U, SC_PAD_CONFIG_NORMAL,
+            SC_PAD_ISO_OFF);
+    }
     else
     {
         ; /* Intentional empty else */
@@ -1204,6 +1211,7 @@ void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
     #ifdef DEBUG
         error_print("SECO Abort (mod %d, ln %d)\n", abort_module,
             abort_line);
+        ss_irq_trigger(SC_IRQ_GROUP_WAKE, SC_IRQ_SECO_ABORT, SC_PT_ALL);
     #else
         board_fault(SC_FALSE, BOARD_BFAULT_SEC_FAIL, SECO_PT);
     #endif
@@ -1497,6 +1505,13 @@ void SNVS_Button_IRQHandler(void)
 {
     SNVS_ClearButtonIRQ();
 
+    /* Do not enable if SECO unavailable */
+    if (snvs_err != SC_ERR_NONE)
+    {
+        NVIC_DisableIRQ(SNVS_Button_IRQn);
+    }
+
+    /* Notify clients */
     ss_irq_trigger(SC_IRQ_GROUP_WAKE, SC_IRQ_BUTTON, SC_PT_ALL);
 }
 
@@ -1916,6 +1931,14 @@ sc_err_t board_ioctl(sc_rm_pt_t caller_pt, sc_rsrc_t mu, uint32_t *parm1,
 #endif
 
     return err;
+}
+
+/*--------------------------------------------------------------------------*/
+/* Board custom monitor command                                             */
+/*--------------------------------------------------------------------------*/
+sc_err_t board_monitor_custom(int argc, char *argv[])
+{
+    return SC_ERR_NONE;
 }
 
 /** @} */

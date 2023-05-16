@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2021 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -581,6 +581,31 @@ sc_err_t sc_pm_reset(sc_ipc_t ipc, sc_pm_reset_type_t type)
 
     /* Fill in send message */
     RPC_U8(&msg, 0U) = U8(type);
+
+    /* Call RPC */
+    sc_call_rpc(ipc, &msg, SC_FALSE);
+
+    /* Copy out result */
+    err = (sc_err_t) RPC_R8(&msg);
+
+    /* Return result */
+    return err;
+}
+
+/* IDL: E8 RESET_STAGE(UI8 stage) #31 */
+sc_err_t sc_pm_reset_stage(sc_ipc_t ipc, sc_pm_reset_stage_t stage)
+{
+    sc_rpc_msg_t msg;
+    sc_err_t err;
+
+    /* Fill in header */
+    RPC_VER(&msg) = SC_RPC_VERSION;
+    RPC_SIZE(&msg) = 2U;
+    RPC_SVC(&msg) = U8(SC_RPC_SVC_PM);
+    RPC_FUNC(&msg) = U8(PM_FUNC_RESET_STAGE);
+
+    /* Fill in send message */
+    RPC_U8(&msg, 0U) = U8(stage);
 
     /* Call RPC */
     sc_call_rpc(ipc, &msg, SC_FALSE);

@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **
-**     Copyright 2019-2020 NXP
+**     Copyright 2019-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -138,6 +138,7 @@ sc_err_t seco_set_mono_counter_partition_hsm(sc_rm_pt_t caller_pt,
     uint16_t *she, uint16_t *hsm);
 #endif
 
+#ifdef API_HAS_FIPS
 /*!
  * Internal SC function to set FIPS mode.
  *
@@ -147,12 +148,21 @@ sc_err_t seco_set_fips_mode(sc_rm_pt_t caller_pt, uint8_t mode,
     uint32_t *reason);
 
 /*!
+ * Internal SC function to degrade FIPS mode.
+ *
+ * @see sc_seco_fips_degrade().
+ */
+sc_err_t seco_fips_degrade(sc_rm_pt_t caller_pt, sc_faddr_t addr,
+    uint32_t *status);
+
+/*!
  * Internal SC function to securely zeroize all plaintext secret and private
  * cryptographic keys and CSPs within the module.
  *
  * @see sc_seco_fips_key_zero().
  */
 sc_err_t seco_fips_key_zero(sc_rm_pt_t caller_pt, sc_faddr_t addr);
+#endif
 
 /*!
  * Internal SC function to start the RNG.
@@ -198,6 +208,16 @@ void seco_build_info(sc_rm_pt_t caller_pt, uint32_t *version,
  */
 sc_err_t seco_v2x_build_info(sc_rm_pt_t caller_pt, uint32_t *version,
     uint32_t *commit);
+#endif
+
+#ifdef API_HAS_FIPS
+/*!
+ * Internal SC function to return FIPS info.
+ *
+ * @see sc_seco_fips_info().
+ */
+sc_err_t seco_fips_info(sc_rm_pt_t caller_pt, seco_fips_info_t *cert,
+    seco_fips_info_t *mode);
 #endif
 
 /*!

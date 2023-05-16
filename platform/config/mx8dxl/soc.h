@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -160,14 +160,14 @@ typedef uint8_t sc_sub_t;
 #define SC_PGP_NA           7U
 
 #define  MTR_PWR_PLAN_SEL_SCU0                  0U
-#define  MTR_PWR_PLAN_SEL_DB                    1U
-#define  MTR_PWR_PLAN_SEL_HSIO                  2U
-#define  MTR_PWR_PLAN_SEL_MCU_0                 3U
-#define  MTR_PWR_PLAN_SEL_LSIO                  4U
-#define  MTR_PWR_PLAN_SEL_CA35                  6U
-#define  MTR_PWR_PLAN_SEL_CONNECTIVITY          7U
-#define  MTR_PWR_PLAN_SEL_DRC_0                 9U
-#define  MTR_PWR_PLAN_SEL_ADMA                  13U
+#define  MTR_PWR_PLAN_SEL_ADMA                  1U
+#define  MTR_PWR_PLAN_SEL_MCU_0                 2U
+#define  MTR_PWR_PLAN_SEL_CONNECTIVITY          3U
+#define  MTR_PWR_PLAN_SEL_DRC_0                 4U
+#define  MTR_PWR_PLAN_SEL_HSIO                  5U
+#define  MTR_PWR_PLAN_SEL_DB                    6U
+#define  MTR_PWR_PLAN_SEL_CA35                  7U
+#define  MTR_PWR_PLAN_SEL_LSIO                  8U
 
 #define SC_SS_INFO_INIT                                                                                 \
     {HAS_SS_SC,      0, SC_PGP_00,   SC_SUBSYS_NA,  0,  0, SC_DSC_SC},          /* SC_SUBSYS_SC */      \
@@ -281,7 +281,7 @@ typedef uint32_t sc_db_connect_t;
 /* Configure Top Level Memory Map */
 
 #define SC_MEMMAP_INIT                                                          \
-    {  LSIO_SS_BASE1,    0x1C000000U, 1, 1, 30, 1, 0x00, SC_SUBSYS_LSIO},       \
+    {  LSIO_SS_BASE1,    0x1C000000U, 1, 2, 30, 1, 0x00, SC_SUBSYS_LSIO},       \
     {   SCU_SS_BASE0,     0x4000000U, 0, 1, 26, 0, 0x00, SC_SUBSYS_SC},         \
     { MCU_0_SS_BASE0,     0x4000000U, 1, 1, 26, 0, 0x00, SC_SUBSYS_MCU_0},      \
     {HSIO_0_SS_BASE2,    0x10000000U, 1, 1, 28, 2, 0x00, SC_SUBSYS_HSIO},       \
@@ -326,6 +326,9 @@ typedef uint32_t sc_db_connect_t;
 /*! Has V2X in SCFW API */
 #define API_HAS_V2X
 
+/*! Has FIPS in SCFW API */
+#define API_HAS_FIPS
+
 /*! Has V2X in DB */
 #define V2X_IN_DB
 
@@ -336,23 +339,42 @@ typedef uint32_t sc_db_connect_t;
 /*! Support partitioning naming for debug */
 #define HAS_PARTITION_NAMES
 
+#define PCIE_INTCLK_JITTER
+
 /*! Enhanced monitor support */
 #define MONITOR_HAS_CMD_OFF
 #define MONITOR_HAS_CMD_MSG
 #define MONITOR_HAS_CMD_VDETECT
 #define MONITOR_HAS_CMD_WDOG
 #define MONITOR_HAS_CMD_PANIC
-#define MONITOR_HAS_CMD_MRC
 #define MONITOR_HAS_CMD_BOOT
 #define MONITOR_HAS_CMD_WAKE
 #define MONITOR_HAS_CMD_GRANT
+#define MONITOR_HAS_CMD_LOG
+#define MONITOR_HAS_CMD_FIPS_ERRORLOG
+#define MONITOR_HAS_CMD_FIPS_SELFTEST
+#define MONITOR_HAS_CMD_FIPS_DEVICEINFO
+#define MONITOR_HAS_CMD_FIPS_INTEGRITY
+#ifndef EXPORT_MONITOR
+#define MONITOR_HAS_CMD_MRC
+#define MONITOR_HAS_CMD_STAGE
+#define MONITOR_HAS_CMD_IEE
+#define MONITOR_HAS_CMD_FIPS_MODE
+#endif
 
 /*! Define to use SECO FW */
 #define HAS_SECO_FW
 
+/*! Define to support FIPS */
+#define HAS_FIPS
+
 /*! Defines for FW versions */
-#define SECO_FW_VERSION ((3UL << 16) | (8UL << 4) | 2UL) 
-#define V2X_FW_VERSION ((1UL << 16) | (1UL << 4) | 1UL) 
+#define SECO_FW_VERSION ((5UL << 16) | (8UL << 4) | 7UL)
+#define V2X_FW_VERSION ((1UL << 16) | (1UL << 4) | 6UL)
+
+/*! Defines for B0 FW versions */
+#define SECO_FW_VERSION_B0 ((5UL << 16) | (9UL << 4) | 0UL)
+#define V2X_FW_VERSION_B0 ((1UL << 16) | (2UL << 4) | 1UL)
 
 /*! Define DDR DATX8 Lanes */
 #define DWC_NO_OF_BYTES	        2U
@@ -362,6 +384,7 @@ typedef uint32_t sc_db_connect_t;
 #define FUSE_TEMP_INDUSL        0x1
 #define FUSE_TEMP_CONS          0x2
 #define FUSE_TEMP_EX_CONS       0x3
+#define FUSE_TEMP_EX_INDUSL     0x4
 #define AI_TEMP_RATE            1000U
 #define AI_TEMP_NP              1915
 #define AI_TEMP_NT              25
@@ -370,6 +393,10 @@ typedef uint32_t sc_db_connect_t;
 #define AI_TEMP_PANIC_INDUS     107
 #define AI_TEMP_PANIC_CONS      97
 #define AI_TEMP_PANIC_EX_CONS   107
+#define AI_TEMP_PANIC_EX_INDUS  127
+#define AI_TEMP_FPU_TS20        133.6f
+#define AI_TEMP_FPU_TS21        -5.39f
+#define AI_TEMP_FPU_TS22        0.002f
 
 /*! Define to indicate timer services required */
 #define HAS_TIMER_SERVICES
@@ -509,15 +536,6 @@ typedef uint32_t sc_db_connect_t;
 #define SOC_MCU_STOPM_PDN       3U                  /* STOPM >= 3 will power down MCU core */
 #define SOC_MCU_STOPM_MEMSR     3U                  /* STOPM == 3 will retain memories */
 #define SOC_SNVS_PWR_ON_WAKEUP  REGBIT64(1, 10)     /* DSC IRQ for SNVS_LP set_pwr_on_irq */
-
-/* Define ADMA mbist */
-#define SS_ADMA_BIST1 (((uint32_t)DSC_ADMA) + 0x8020U)
-#define SS_ADMA_BIST1_START 230U
-#define SS_ADMA_BIST1_END 233U
-
-#define SS_ADMA_BIST3 (((uint32_t)DSC_ADMA) + 0x8040U)
-#define SS_ADMA_BIST3_START 234U
-#define SS_ADMA_BIST3_END 266U
 
 /* Defines for DDR training */
 #define DQS_TIMER_DURATION_512  1U    /* 512 * tCK = 2048 * (1/1200) = 1 us (round up) */

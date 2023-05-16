@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **
-**     Copyright 2019-2020 NXP
+**     Copyright 2019-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@
 
 #include "main/scfw.h"
 #include "main/main.h"
+#include "main/soc.h"
 #include "main/board.h"
 #include "svc/seco/svc.h"
 #include "svc/rm/svc.h"
@@ -224,6 +225,7 @@ sc_err_t seco_set_mono_counter_partition_hsm(sc_rm_pt_t caller_pt,
 }
 #endif
 
+#ifdef API_HAS_FIPS
 /*--------------------------------------------------------------------------*/
 /* Set FIPS mode                                                            */
 /*--------------------------------------------------------------------------*/
@@ -238,7 +240,7 @@ sc_err_t seco_set_fips_mode(sc_rm_pt_t caller_pt, uint8_t mode,
         
         if (err == SC_ERR_NONE)
         {
-            *reason = SECO_SetFipsMode(mode);
+            *reason = SECO_FIPS_SetMode(mode);
             err = seco_err;
         }
 
@@ -249,18 +251,43 @@ sc_err_t seco_set_fips_mode(sc_rm_pt_t caller_pt, uint8_t mode,
 }
 
 /*--------------------------------------------------------------------------*/
-/* zeroize all plaintext secret and private cryptographic keys              */
+/* Degrade FIPS mode                                                        */
+/*--------------------------------------------------------------------------*/
+sc_err_t seco_fips_degrade(sc_rm_pt_t caller_pt, sc_faddr_t addr,
+    uint32_t *status)
+{
+    #ifdef HAS_SECO
+        sc_err_t err = SC_ERR_NONE;
+
+        /* Check access permissions */
+        SYSTEM(caller_pt);
+        
+        if (err == SC_ERR_NONE)
+        {
+            *status = SECO_FIPS_ClusterDegrade(addr);
+            err = seco_err;
+        }
+
+        return err;
+    #else
+        return SC_ERR_UNAVAILABLE;
+    #endif
+}
+
+/*--------------------------------------------------------------------------*/
+/* Zeroize all plaintext secret and private cryptographic keys              */
 /*--------------------------------------------------------------------------*/
 sc_err_t seco_fips_key_zero(sc_rm_pt_t caller_pt, sc_faddr_t addr)
 {
     #ifdef HAS_SECO
-        SECO_FipsKeyZero(addr);
+        SECO_FIPS_KeyZero(addr);
 
         return seco_err;
     #else
         return SC_ERR_UNAVAILABLE;
     #endif
 }
+#endif
 
 /*--------------------------------------------------------------------------*/
 /* Start RNG                                                                */
@@ -382,6 +409,46 @@ sc_err_t seco_v2x_build_info(sc_rm_pt_t caller_pt, uint32_t *version,
     }
 
     return err;
+}
+#endif
+
+#ifdef API_HAS_FIPS
+/*--------------------------------------------------------------------------*/
+/* Return FIPS info                                                         */
+/*--------------------------------------------------------------------------*/
+sc_err_t seco_fips_info(sc_rm_pt_t caller_pt, seco_fips_info_t *cert,
+    seco_fips_info_t *mode)
+{
+    *cert = SC_SECO_FIPS_INFO_NONE;
+    *mode = SC_SECO_FIPS_INFO_NONE;
+
+    #ifdef OTP_FIPS_MODE_DIS
+        if (soc_is_fips_cert() != SC_FALSE)
+        {
+            *cert = SC_SECO_FIPS_INFO_SECO_ONLY;
+        }
+    #endif
+    #ifdef OTP_V2X_FIPS_MODE_DIS
+        if (soc_is_v2x_fips_cert() != SC_FALSE)
+        {
+            *cert = SC_SECO_FIPS_INFO_SECO_V2X;
+        }
+    #endif
+
+    #ifdef OTP_FIPS_MODE
+        if (soc_is_fips_mode() != SC_FALSE)
+        {
+            *mode = SC_SECO_FIPS_INFO_SECO_ONLY;
+        }
+    #endif
+    #ifdef OTP_V2X_FIPS_MODE
+        if (soc_is_v2x_fips_mode() != SC_FALSE)
+        {
+            *mode = SC_SECO_FIPS_INFO_SECO_V2X;
+        }
+    #endif
+
+    return SC_ERR_NONE;
 }
 #endif
 

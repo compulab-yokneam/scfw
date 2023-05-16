@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -68,10 +68,12 @@ SS_FUNC_PROTO_DB
 
 void ss_auto_clock_gate_db(sc_bool_t enable);
 void ss_v2x_enable(void);
+void ss_v2x_disable(void);
 void ss_v2x_set_state(ss_v2x_state_t state);
 ss_v2x_state_t ss_v2x_get_state(void);
 sc_bool_t ss_v2x_clock_run(sc_bool_t enable);
 void ss_v2x_auth_finish(sc_bool_t fw_load, sc_bool_t clr_irq);
+void ss_v2x_force_serious(void);
 
 /* External variables */
 

@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -64,6 +64,8 @@
 
 #define RM_RANGE_MASK      U16(0x8000U)
 #define RM_RANGE(X,Y)      ((X) | RM_RANGE_MASK), (Y)
+#define RM_SS_MASK         U16(0x4000U)
+#define RM_SS(X)           ((X) | RM_SS_MASK)
 
 /* Types */
 

@@ -288,6 +288,9 @@ sc_err_t sc_timer_set_rtc_time(sc_ipc_t ipc, uint16_t year, uint8_t mon,
  * @param[out]    min         pointer to return minute (0-59)
  * @param[out]    sec         pointer to return second (0-59)
  *
+ * Note setting the date after Feb 6 2106 will result in a roll-over but
+ * an error will **not** be returned.
+ *
  * @return Returns an error code (SC_ERR_NONE = success).
  */
 /* IDL: E8 GET_RTC_TIME(UO16 year, UO8 mon, UO8 day, UO8 hour, UO8 min, UO8 sec) #7 */
@@ -317,7 +320,8 @@ sc_err_t sc_timer_get_rtc_sec1970(sc_ipc_t ipc, uint32_t *sec);
  * @param[in]     sec         second (0-59)
  *
  * Note this alarm setting clears when the alarm is triggered. This is an
- * absolute time.
+ * absolute time. Setting the alarm after Feb 6 2106 will result in a
+ * roll-over but an error will **not** be returned.
  *
  * @return Returns an error code (SC_ERR_NONE = success).
  *

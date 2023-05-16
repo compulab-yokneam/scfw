@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -339,7 +339,7 @@ typedef struct
     sc_faddr_t start;                    //!< Start of subsystem address range
     sc_faddr_t len;                      //!< Length of of subsystem address range
     uint8_t mem        : SC_BOOL_W;      //!< Contains memory
-    uint8_t ss_prot    : SC_SSPROT_W;    //!< Protection 0=DB, 1=SS, 2=none
+    uint8_t ss_prot    : SC_SSPROT_W;    //!< Protection 0=DB, 1=SS, 2=both, 3=none
     sc_msize_t size    : SC_MSIZE_W;     //!< ZADDR size
     sc_mslot_t slot    : SC_MSLOT_W;     //!< ZADDR slot
     sc_sslot_t subslot : SC_SSLOT_W;     //!< ZADDR subslot
@@ -396,6 +396,9 @@ sc_err_t main_get_mem_ss(sc_faddr_t start_addr, uint32_t *ss);
 #ifdef TEST_BOOTTIME
 void test_save_time(uint32_t bootTicksRom, uint32_t bootTicksBanner,
     uint32_t bootTicksEarly);
+#endif
+#ifdef ENABLE_IDLE
+void idle_tick(uint16_t msec);
 #endif
 
 /* Externs */

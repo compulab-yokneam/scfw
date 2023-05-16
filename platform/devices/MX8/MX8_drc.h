@@ -7,7 +7,8 @@
 **     Abstract:
 **         CMSIS Peripheral Access Layer for MX8
 **
-**     Copyright (c) 1997 - 2018 Freescale Semiconductor, Inc.
+**     Copyright (c) 1997 - 2016 Freescale Semiconductor, Inc.
+**     Copyright 2017-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -54,6 +55,9 @@
  * @addtogroup DRC_Peripheral_Access_Layer DRC Peripheral Access Layer
  * @{
  */
+#define INLINE_ECC       (1U)
+#define SIDEBAND_ECC     (2U)
+
 typedef struct {
     uint32_t mstr;
     uint32_t derateen;
@@ -101,7 +105,6 @@ typedef struct {
     uint32_t addrmap6;
     uint32_t addrmap7;
     uint32_t addrmap8;
-    uint32_t ecccfg0;
     uint32_t dbictl;
     uint32_t odtcfg;
     uint32_t odtmap;
@@ -113,6 +116,17 @@ typedef struct {
     uint32_t pwrctl;
     uint32_t pwrtmg;
     uint32_t gpr_qchan;
+    #if (defined(FSL_FEATURE_DDRC_ECC_SUPPORT))
+    uint32_t ecccfg0;
+    uint32_t sbrctl;
+    #if (FSL_FEATURE_DDRC_ECC_SUPPORT == INLINE_ECC)
+    uint32_t ecccfg1;
+    uint32_t sbrstart0;
+    uint32_t sbrstart1;
+    uint32_t sbrrange0;
+    uint32_t sbrrange1;
+    #endif
+    #endif
 } ddrc;
 
 typedef struct{

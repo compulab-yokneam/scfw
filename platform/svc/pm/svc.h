@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2021 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -491,7 +491,7 @@ sc_err_t pm_reboot_partition(sc_rm_pt_t caller_pt, sc_rm_pt_t pt,
     sc_pm_reset_type_t type);
 
 /*!
- * Internal SC function to conntinue reboot.
+ * Internal SC function to continue reboot.
  *
  * @see sc_reboot_continue().
  */
@@ -508,6 +508,13 @@ void pm_reboot_continue_all(void);
  * @see sc_pm_reset().
  */
 sc_err_t pm_reset(sc_rm_pt_t caller_pt, sc_pm_reset_type_t type);
+
+/*!
+ * Internal SC function to reset the system to the specified stage.
+ *
+ * @see sc_pm_reset_stage().
+ */
+sc_err_t pm_reset_stage(sc_rm_pt_t caller_pt, sc_pm_reset_stage_t stage);
 
 /*!
  * Internal SC function used to reboot a partition.

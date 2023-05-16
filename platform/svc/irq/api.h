@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -128,6 +128,7 @@
 #define SC_IRQ_SW_WAKE           (1U << 5U)    /*!< Software requested wake */
 #define SC_IRQ_SECVIO            (1U << 6U)    /*!< Security violation */
 #define SC_IRQ_V2X_RESET         (1U << 7U)    /*!< V2X reset */
+#define SC_IRQ_SECO_ABORT        (1U << 8U)    /*!< SECO abort */
 /** @} */
 
 /*!

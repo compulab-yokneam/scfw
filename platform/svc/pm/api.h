@@ -134,6 +134,16 @@
 /** @} */
 
 /*!
+ * @name Defines for sc_pm_reset_stage_t
+ */
+/** @{ */
+#define SC_PM_RESET_STAGE_PRIMARY      0U    /*!< Primary */
+#define SC_PM_RESET_STAGE_SECONDARY    1U    /*!< Secondary */
+#define SC_PM_RESET_STAGE_RECOVERY     2U    /*!< Recovery */
+#define SC_PM_RESET_STAGE_SERIAL       3U    /*!< Serial download */
+/** @} */
+
+/*!
  * @name Defines for sc_pm_reset_reason_t
  */
 /** @{ */
@@ -151,6 +161,7 @@
 #define SC_PM_RESET_REASON_SECO        11U   /*!< Other SECO reset */
 #define SC_PM_RESET_REASON_SCFW_FAULT  12U   /*!< SCFW fault reset */
 #define SC_PM_RESET_REASON_V2X_DEBUG   13U   /*!< V2X debug switch */
+#define SC_PM_RESET_REASON_BOOT_STAGE  14U   /*!< Reset to move boot stage */
 /** @} */
 
 /*!
@@ -202,6 +213,11 @@ typedef uint32_t sc_pm_clock_rate_t;
  * This type is used to declare a desired reset type.
  */
 typedef uint8_t sc_pm_reset_type_t;
+
+/*!
+ * This type is used to declare a desired reset stage.
+ */
+typedef uint8_t sc_pm_reset_stage_t;
 
 /*!
  * This type is used to declare a reason for a reset.
@@ -677,6 +693,27 @@ sc_err_t sc_pm_get_clock_parent(sc_ipc_t ipc, sc_rsrc_t resource,
 sc_err_t sc_pm_reset(sc_ipc_t ipc, sc_pm_reset_type_t type);
 
 /*!
+ * This function is used to reset the system to s specific boot stage.
+ * Only the owner of the SC_R_SYSTEM resource or a partition with
+ * access permissions to SC_R_SYSTEM can do this.
+ *
+ * @param[in]     ipc         IPC handle
+ * @param[in]     stage       reset stage
+ *
+ * @return Returns an error code (SC_ERR_NONE = success).
+ *
+ * Return errors:
+ * - SC_ERR_PARM if invalid type,
+ * - SC_ERR_NOACCESS if caller cannot access SC_R_SYSTEM
+ *
+ * If this function returns, then the reset did not occur due to an
+ * invalid parameter. The reset type is always warm so that the stage
+ * can be passed to the ROM.
+ */
+/* IDL: E8 RESET_STAGE(UI8 stage) #31 */
+sc_err_t sc_pm_reset_stage(sc_ipc_t ipc, sc_pm_reset_stage_t stage);
+
+/*!
  * This function gets a caller's reset reason.
  *
  * @param[in]     ipc         IPC handle
@@ -731,7 +768,7 @@ sc_err_t sc_pm_get_reset_part(sc_ipc_t ipc, sc_rm_pt_t *pt);
  *   partition to boot
  *
  * This must be used to boot a partition. Only a partition booted this
- * way can be rebooted using the watchdog, sc_pm_boot() or
+ * way can be rebooted using the watchdog, sc_pm_reboot() or
  * sc_pm_reboot_partition().
  *
  * Note the address is limited by the hardware implementation. See the

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016, Freescale Semiconductor, Inc.
- * Copyright 2017-2020 NXP
+ * Copyright 2017-2021 NXP
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -1008,7 +1008,7 @@ sc_err_t pf8100_pmic_wdog_set_timeout(pmic_id_t id, uint32_t* timeout)
     sc_err_t err = SC_ERR_NONE;
     if ((*timeout > 0U) && (*timeout < 32768U))
     {
-        while ((*timeout < BIT32(counter)) && (counter < 0x0FU))
+        while ((*timeout > BIT32(counter)) && (counter < 0x0FU))
         {counter++;}
 
         counter = counter & 0x0FU; /* Mask to make sure we only write the bits we want */

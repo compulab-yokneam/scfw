@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2021 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -405,6 +405,22 @@ void pm_dispatch(sc_rm_pt_t caller_pt, sc_rsrc_t mu, sc_rpc_msg_t *msg)
 
                 /* Call function */
                 err = pm_reset(caller_pt, type);
+                result = err;
+
+                /* Copy in return parameters */
+                RPC_R8(msg) = U8(result);
+                RPC_SIZE(msg) = 1U;
+                break;
+            }
+        /* Dispatch reset_stage() */
+        case PM_FUNC_RESET_STAGE :
+            {
+                /* Declare return and parameters */
+                sc_err_t result;
+                sc_pm_reset_stage_t stage = ((sc_pm_reset_stage_t) RPC_U8(msg, 0U));
+
+                /* Call function */
+                err = pm_reset_stage(caller_pt, stage);
                 result = err;
 
                 /* Copy in return parameters */

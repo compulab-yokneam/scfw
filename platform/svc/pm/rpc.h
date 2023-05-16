@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2021 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -77,6 +77,7 @@
 #define PM_FUNC_SET_CLOCK_PARENT 14U /*!< Index for sc_pm_set_clock_parent() RPC call */
 #define PM_FUNC_GET_CLOCK_PARENT 15U /*!< Index for sc_pm_get_clock_parent() RPC call */
 #define PM_FUNC_RESET 13U /*!< Index for sc_pm_reset() RPC call */
+#define PM_FUNC_RESET_STAGE 31U /*!< Index for sc_pm_reset_stage() RPC call */
 #define PM_FUNC_RESET_REASON 10U /*!< Index for sc_pm_reset_reason() RPC call */
 #define PM_FUNC_GET_RESET_PART 26U /*!< Index for sc_pm_get_reset_part() RPC call */
 #define PM_FUNC_BOOT 8U /*!< Index for sc_pm_boot() RPC call */

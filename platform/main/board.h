@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -57,12 +57,6 @@
 
 #define BOARD_PARM_RTN_EXTERNAL             2U   /*!< Return value for BOARD_PARM_PCIE_PLL */
 #define BOARD_PARM_RTN_INTERNAL             3U   /*!< Return value for BOARD_PARM_PCIE_PLL */
-#define BOARD_PARM_RTN_INTERNAL_DPLL        4U   /*!< Return value for BOARD_PARM_PCIE_PLL (DXL only) */
-
-#define BOARD_PARM_RTN_DPLL_SS_0_5          5U   /*!< 0.5% spread of PCIE DPLL frequency. */
-#define BOARD_PARM_RTN_DPLL_SS_1           10U   /*!< 1% spread of PCIE DPLL frequency. */
-#define BOARD_PARM_RTN_DPLL_SS_1_5         15U   /*!< 1.5% spread of PCIE DPLL frequency. */
-#define BOARD_PARM_RTN_DPLL_SS_2           20U   /*!< 2% spread of PCIE DPLL frequency. */
 
 /* Used to specify VDD_MEMC on the board. Must match the board design.
    See the Porting Guide and i.MX8DXL Data Sheet. */
@@ -81,6 +75,9 @@
 #define BOARD_PARM_RNG_START_ENABLE         0U   /*!< Enable SC start of RNG */
 #define BOARD_PARM_RNG_START_DISABLE        1U   /*!< Disable SC start of RNG */
 
+#define BOARD_PARM_LSIO_DB_MR_DISABLE       0U   /*!< FlexSPI/OCRAM IEE not supported */
+#define BOARD_PARM_LSIO_DB_MR_ENABLE        1U   /*!< FlexSPI/OCRAM IEE supported, uses extra DB MRC regions */
+
 /*--------------------------------------------------------------------------*/
 /* Board PLL spread spectrum fspread in part per thousand                   */
 /* Supported values - 0.4% (4), 1.0% (10), 1.4% (14), 2.0% (20)             */
@@ -89,6 +86,19 @@
 #define BOARD_PARM_SSC_N_1P0               10U   /*!< Return 1.0% fspread for PLL spread spectrum */
 #define BOARD_PARM_SSC_N_1P4               14U   /*!< Return 1.4% fspread for PLL spread spectrum */
 #define BOARD_PARM_SSC_N_2P0               20U   /*!< Return 2.0% fspread for PLL spread spectrum */
+
+/* Log mode flags */
+#define BOARD_LOG_MODE_ENABLE            BIT(0)  /*!< Log enabled */
+#define BOARD_LOG_MODE_FIFO              BIT(1)  /*!< FIFO mode (wrap) */
+
+/*! Initial log mode */
+#define BOARD_LOG_MODE_INIT              (BOARD_LOG_MODE_ENABLE | BOARD_LOG_MODE_FIFO)
+
+/* Log tags */
+#define BOARD_LOG_MU_RX(X)                  ((0UL << 24) | U32(X))  /*!< Log MU RX */
+#define BOARD_LOG_MU_TX(X)                  ((1UL << 24) | U32(X))  /*!< Log MU TX */
+#define BOARD_LOG_SECO_TX()                 (2UL << 24)             /*!< Log SECO TX */
+#define BOARD_LOG_SECO_RX()                 (3UL << 24)             /*!< Log SECO RX */
 
 /* Types */
 
@@ -109,9 +119,9 @@ typedef enum
     BOARD_PARM_ISI_PIX_FREQ      = 9,    /*!< ISI pixel clock frequency override */
     BOARD_PARM_VDD_MEMC          = 10,   /*!< VDD_MEMC voltage, valid only for DXL */
     BOARD_PARM_KS1_WDOG_WAKE     = 11,   /*!< Controls if SC WDOG configuration during KS1 */
-    BOARD_PARM_PCIE_DPLL_SS      = 12,   /*!< Spread Spectrum SPREAD value for PCIE DPLL (DXL ONLY) */
-    BOARD_PARM_RNG_START_BOOT    = 13,   /*!< Control if SC will start the RNG at boot (default = yes) */
-    BOARD_PARM_RNG_START_KS1     = 14    /*!< Control if SC will start the RNG on KS1 exit (default = yes) */
+    BOARD_PARM_RNG_START_BOOT    = 12,   /*!< Control if SC will start the RNG at boot (default = yes) */
+    BOARD_PARM_RNG_START_KS1     = 13,   /*!< Control if SC will start the RNG on KS1 exit (default = yes) */
+    BOARD_PARM_LSIO_DB_MR        = 14    /*!< Control if extra DB memory regions used to support FlexSPI/OCRAM IEE (default = no) */
 } board_parm_t;
 
 /*!
@@ -184,6 +194,16 @@ typedef enum
     BOARD_DDR0_VREF             = 9,    /*!< Run VREF training for DRC 0 */
     BOARD_DDR1_VREF             = 10    /*!< Run VREF training for DRC 1 */
 } board_ddr_action_t;
+
+/*!
+ * This type is used to store a log entry.
+ */
+typedef struct
+{
+    uint32_t timestamp;                 /*!< Time of log entry */
+    uint32_t data0;                     /*!< Data value 0 */
+    uint32_t data1;                     /*!< Data value 1 */
+} board_log_t;
 
 /* Macros */
 
@@ -662,6 +682,18 @@ void board_fault(sc_bool_t restarted, sc_bfault_t reason,
 void board_sec_fault(uint8_t abort_module, uint8_t abort_line,
     sc_sfault_t reason);
 
+#ifdef HAS_V2X
+/*!
+ * This function is called when a V2X authentication step is
+ * complete and the SCFW is notified.
+ *
+ * @param[in]     state         V2X authentication state
+ *
+ * State is the same as the return from SECO_V2X_GetState().
+ */
+void board_v2x_auth_state(uint8_t state);
+#endif
+
 /*!
  * This function is called when a security violation is reported by
  * the SECO or SNVS.
@@ -736,6 +768,43 @@ void board_tick(uint16_t msec);
  */
 sc_err_t board_ioctl(sc_rm_pt_t caller_pt, sc_rsrc_t mu, uint32_t *parm1,
     uint32_t *parm2, uint32_t *parm3);
+
+/*!
+ * This function is called when the monitor custom command is used.
+ *
+ * @param[in]     argc          number of arguments
+ * @param[in]     argv          array of argument strings
+ *
+ * Can be used to implement customer extensions to the SCFW debug
+ * monitor.
+ *
+ * @return Returns an error code (SC_ERR_NONE = success).
+ */
+sc_err_t board_monitor_custom(int argc, char *argv[]);
+
+#ifdef BOARD_LOG_SIZE
+/*!
+ * This function is called to configure or trigger logging.
+ *
+ * @param[in]     mode          mode flags
+ */
+void board_log_mode(uint32_t mode);
+#endif
+
+/*!
+ * This function is called to log data.
+ *
+ * @param[in]     data0         first data to log
+ * @param[in]     data1         second data to log
+ */
+void board_log_write(uint32_t data0, uint32_t data1);
+
+/*!
+ * This function is called by the monitor to dump the log.
+ *
+ * @return Returns an error code (SC_ERR_NONE = success).
+ */
+sc_err_t board_log_dump(void);
 
 /*!
  * Interrupt handler for the PMIC.

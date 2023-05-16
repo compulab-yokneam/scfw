@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -449,7 +449,7 @@ typedef uint32_t sc_db_connect_t;
 /* Configure Top Level Memory Map */
 
 #define SC_MEMMAP_INIT                                                          \
-    {  LSIO_SS_BASE1,    0x1C000000U, 1, 1, 30, 1, 0x00, SC_SUBSYS_LSIO},       \
+    {  LSIO_SS_BASE1,    0x1C000000U, 1, 2, 30, 1, 0x00, SC_SUBSYS_LSIO},       \
     {   SCU_SS_BASE0,     0x4000000U, 0, 1, 26, 0, 0x00, SC_SUBSYS_SC},         \
     { MCU_0_SS_BASE0,     0x4000000U, 1, 1, 26, 0, 0x00, SC_SUBSYS_MCU_0},      \
     { MCU_1_SS_BASE0,     0x4000000U, 1, 1, 26, 0, 0x00, SC_SUBSYS_MCU_1},      \
@@ -517,13 +517,16 @@ typedef uint32_t sc_db_connect_t;
 #define MONITOR_HAS_CMD_BOOT
 #define MONITOR_HAS_CMD_WAKE
 #define MONITOR_HAS_CMD_GRANT
+#define MONITOR_HAS_CMD_LOG
+#define MONITOR_HAS_CMD_STAGE
+#define MONITOR_HAS_CMD_IEE
 #endif
 
 /*! Define to use SECO FW */
 #define HAS_SECO_FW
 
 /*! Define for FW version */
-#define SECO_FW_VERSION ((3UL << 16) | (7UL << 4) | 4UL)
+#define SECO_FW_VERSION ((3UL << 16) | (8UL << 4) | 5UL)
 
 /*! Define to use MIPI DSI/CSI trim */
 #define HAS_DSI_VOH_TRIM
@@ -537,10 +540,21 @@ typedef uint32_t sc_db_connect_t;
 #define SC_ROM_FUNC_VER     0x0001U
 
 /*! Defines for AI temp sensor */
+#define FUSE_TEMP_AUTO          0x0
+#define FUSE_TEMP_INDUSL        0x1
 #define AI_TEMP_RATE            1000U
 #define AI_TEMP_NP              1915
 #define AI_TEMP_NT              25
 #define AI_TEMP_PANIC           127
+#define AI_TEMP_PANIC_AUTO      127
+#define AI_TEMP_PANIC_INDUS     107
+#define AI_TEMP_FPU_TS20        133.6f
+#define AI_TEMP_FPU_TS21        -5.39f
+#define AI_TEMP_FPU_TS22        0.002f
+
+/*! Defines for temp grade frequency limit */
+#define INDUSL_MAX_FREQ_AP_0     SC_1104MHZ
+#define INDUSL_MAX_FREQ_AP_1     SC_1300MHZ
 
 /*!
  * Define operating points for A53, A72 and GPU.

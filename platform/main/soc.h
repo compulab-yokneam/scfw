@@ -2,7 +2,7 @@
 ** ###################################################################
 **
 **     Copyright (c) 2016 Freescale Semiconductor, Inc.
-**     Copyright 2017-2020 NXP
+**     Copyright 2017-2022 NXP
 **
 **     Redistribution and use in source and binary forms, with or without modification,
 **     are permitted provided that the following conditions are met:
@@ -124,14 +124,15 @@
  * @name Defines for patch ID
  */
 /** @{ */
-#define SC_PATCH_ID_NONE            0x00U   /* Non patch - end marker */
-#define SC_PATCH_ID_SCU             0x55U   /* SCU ROM patch */
-#define SC_PATCH_ID_SECO            0x45U   /* SECO ROM patch */
-#define SC_PATCH_ID_V2X             0x57U   /* V2X primary ROM patch */
-#define SC_PATCH_ID_V2X2            0x59U   /* V2X secondary ROM patch */
-#define SC_PATCH_ID_C2XS            0x5AU   /* V2X ROM patch SHA value */
-#define SC_PATCH_ID_CTRL            0x5BU   /* Patch control */
-#define SC_PATCH_ID_ALL             0xFFU   /* All patch IDs */
+#define SC_PATCH_ID_NONE            0x00U   /*!< Non patch - end marker */
+#define SC_PATCH_ID_SCU             0x55U   /*!< SCU ROM patch */
+#define SC_PATCH_ID_SECO            0x45U   /*!< SECO ROM patch */
+#define SC_PATCH_ID_V2X             0x57U   /*!< V2X primary ROM patch */
+#define SC_PATCH_ID_V2X2            0x59U   /*!< V2X secondary ROM patch */
+#define SC_PATCH_ID_C2XS            0x5AU   /*!< V2X ROM patch SHA value */
+#define SC_PATCH_ID_CTRL            0x5BU   /*!< Patch control */
+#define SC_PATCH_ID_V2X_ALL         0xFEU   /*!< All V2X patch IDs */
+#define SC_PATCH_ID_ALL             0xFFU   /*!< All patch IDs */
 /** @} */
 
 typedef struct
@@ -310,7 +311,7 @@ typedef struct
 typedef struct
 {
     const sc_rsrc_t isi_rsrc;                   /*!< ISI channel used for sync */
-    ISI_Type * const isi_regs;                  /*!< ISI peripheral registers */
+    ISI_Type * const isi_regs;                  /*!< ISI peripheral registers */ 
     uint32_t timeout_usec;                      /*!< Sync search timeout */
 } soc_dqs2dq_sync_info_t;
 #endif
@@ -320,9 +321,9 @@ typedef struct
  */
 typedef struct
 {
-    const sc_rsrc_t rsrc;
-    uint16_t count;
-    uint16_t ss_count;
+    const sc_rsrc_t rsrc;            /*!< resource in the MSI master SS */
+    uint16_t count;                  /*!< track number of resources powered up in MSI ring. */
+    uint16_t ss_count;               /*!< track number of resources powered up in MSI Master SS */
 } soc_msi_ring_usecount_t;
 
 #ifndef NO_DEVICE_ACCESS
@@ -397,10 +398,10 @@ extern sc_rm_pt_t soc_reset_pt;
 /*! Global variable to hold reset reason */
 extern sc_pm_reset_reason_t soc_reset_rsn;
 
-/* ! Global variable to hold the dco-pc values for table 0 */
+/*! Global variable to hold the dco-pc values for table 0 */
 extern uint32_t soc_dpll_tbl_0[];
 
-/* ! Global variable to hold the dco-pc values for table 1 */
+/*! Global variable to hold the dco-pc values for table 1 */
 extern uint32_t soc_dpll_tbl_1[];
 
 /*!Global variable to store the state of clocks during power transition */
@@ -442,7 +443,7 @@ extern uint32_t soc_max_ap2_freq;
 #endif
 
 #if (HAS_SS_GPU_0 || HAS_SS_GPU_1) && !defined(NO_GPU_CLKS)
-/*!
+/*! 
  * Global variable to hold the GPU clock frequency and voltage for the
  * various operating points.
  */
@@ -463,12 +464,6 @@ extern soc_cluster_state_t soc_cluster_state[SOC_NUM_CLUSTER];
 
 #ifdef SWI_DQS2DQ_IRQn
 extern soc_dqs2dq_sync_info_t *soc_dqs2dq_sync_info;
-#endif
-
-#if FSL_FEATURE_PCIE_DPLL_SS
-extern uint32_t ss_step;
-extern uint32_t ss_stop;
-extern uint32_t ss_denom;
 #endif
 
 /*! Global variable to track if boot resources should not be reset. */
@@ -524,6 +519,8 @@ void soc_autocal_refgen_tree(void);
 
 /*!
  * This function returns the pointer to fuse availability array.
+ *
+ * @return Returns the pointer.
  */
 uint32_t *soc_get_fuse_avail(void);
 
@@ -539,6 +536,16 @@ void soc_init_fused_rsrc(void);
  * @param[in]     ss          subsystem not available
  */
 void soc_ss_notavail(sc_sub_t ss);
+
+#ifdef SOC_HAS_CHILD_FUSED_RSRC
+    /*!
+     * This function configures a subsystem's child subsystems as
+     * not available.
+     *
+     * @param[in]     ss          subsystem not available
+     */
+    void soc_child_fused_rsrc(sc_sub_t ss);
+#endif
 
 /*!
  * This function initializes the refgen trims from the fuses.
@@ -588,11 +595,15 @@ void soc_set_reset_info(sc_pm_reset_reason_t reason, sc_rm_pt_t pt);
 
 /*!
  * Return reset reason.
+ *
+ * @return Returns the reason.
  */
 sc_pm_reset_reason_t soc_reset_reason(void);
 
 /*!
  * Return partition causing reset.
+ *
+ * @return Returns the partition.
  */
 sc_rm_pt_t soc_reset_part(void);
 
@@ -622,6 +633,15 @@ uint32_t soc_get_temp_trim(sc_dsc_t dsc);
  * @return Returns the offset value.
  */
 int8_t soc_get_temp_ofs(sc_dsc_t dsc);
+
+/*!
+ * This function returns the stress trim value for a temp sensor.
+ *
+ * @param[in]     dsc         DSC to check
+ *
+ * @return Returns the offset value.
+ */
+int8_t soc_get_temp_stress(sc_dsc_t dsc);
 
 /*!
  * This function returns temp interrupt to use.
@@ -714,7 +734,7 @@ sc_bool_t soc_ss_has_bias(sc_sub_t ss);
 dsc_ai_type_t soc_ss_ai_type(sc_sub_t ss);
 
 /*!
- * Return the type of memory used in the given PD of
+ * Return the type of memory used in the given PD of 
  * the DSC.
  *
  *@param[in]      dsc            DSC to affect
@@ -725,7 +745,7 @@ dsc_ai_type_t soc_ss_ai_type(sc_sub_t ss);
 uint32_t soc_mem_type(sc_dsc_t dsc, uint32_t pd);
 
 /*!
- * This function returns the uniquely defined memory power plane
+ * This function returns the uniquely defined memory power plane 
  * for the given dsc id
  *
  * @param[in]     dsc_id          DSC to check
@@ -810,10 +830,11 @@ sc_bool_t soc_gpu_freq_hw_limited(void);
 /*!
  * Calculate and return the ROM patch checksum.
  *
+ * @param[in]        id               ID of patches to find
  * @param[out]       checksum          pointer to return checksum
  * @param[in]        len               length of fuse area to sum
  */
-void soc_rompatch_checksum(uint32_t *checksum, uint16_t len);
+void soc_rompatch_checksum(uint8_t id, uint32_t *checksum, uint16_t len);
 
 #ifdef ROM_PATCH_HEADER
 /*!
@@ -853,6 +874,49 @@ sc_err_t soc_patch_info_n(uint8_t id, uint8_t *desc, uint8_t *len,
     uint8_t *type, uint32_t *checksum);
 #endif
 
+#ifdef OTP_FIPS_MODE_DIS
+/*!
+ * This function returns the FIPS cert.
+ *
+ * @return Returns SC_TRUE if FIPS certified.
+ */
+sc_bool_t soc_is_fips_cert(void);
+#endif
+
+#ifdef OTP_FIPS_MODE
+/*!
+ * This function returns the FIPS mode.
+ *
+ * @return Returns SC_TRUE if in FIPS mode.
+ */
+sc_bool_t soc_is_fips_mode(void);
+#endif
+
+#ifdef OTP_V2X_FIPS_MODE_DIS
+/*!
+ * This function returns the V2X FIPS cert.
+ *
+ * @return Returns SC_TRUE if V2X FIPS certified.
+ */
+sc_bool_t soc_is_v2x_fips_cert(void);
+#endif
+
+#ifdef OTP_V2X_FIPS_MODE
+/*!
+ * This function returns the V2X FIPS mode.
+ *
+ * @return Returns SC_TRUE if in V2X FIPS mode.
+ */
+sc_bool_t soc_is_v2x_fips_mode(void);
+#endif
+
+/*!
+ * This function returns the required SECO version.
+ *
+ * @return Returns the required SECO version based on SoC version.
+ */
+uint32_t soc_get_req_seco_version(void);
+
 /** @} */
 
 /*!
@@ -862,6 +926,8 @@ sc_err_t soc_patch_info_n(uint8_t id, uint8_t *desc, uint8_t *len,
 
 /*!
  * Enable/Disable anamix in some SS during init and low power mode.
+ *
+ * @param[in]     enable      SC_TRUE to enable
  */
 void soc_setup_anamix(sc_bool_t enable);
 
@@ -973,9 +1039,9 @@ sc_bool_t soc_bias_enabled(sc_sub_t ss);
 
 
 /*!
- * Check if the new PLL rate is below the max freq vd-detect in the SS
+ * Check if the new PLL rate is below the max freq vd-detect in the SS 
  * can support.
- *
+ * 
  * @param[in]    dsc        DSC of subsystem to affect
  * @param[in]    rate       New pll rate
  *
@@ -1130,7 +1196,7 @@ sc_err_t soc_init_ddr(sc_bool_t early);
 void soc_self_refresh_power_down_clk_disable_entry(void);
 
 /*!
- * This function enables DDR clocks and exits the DDR from SRPD (self-refresh
+ * This function enables DDR clocks and exits the DDR from SRPD (self-refresh 
  * power down).
  */
 void soc_refresh_power_down_clk_disable_exit(void);
@@ -1179,7 +1245,7 @@ void soc_ddr_dqs2dq_periodic(void);
 void soc_ddr_dqs2dq_config(soc_dqs2dq_sync_info_t *dqs2dq_sync_info);
 
 /*!
- * This function sychronizes LPDDR4 DQS2DQ periodic training to
+ * This function sychronizes LPDDR4 DQS2DQ periodic training to 
  * DDR traffic events (i.e. ISI frame completion).
  */
 void soc_ddr_dqs2dq_sync(void);
@@ -1204,8 +1270,28 @@ void soc_drc_lpcg_setup(void);
  */
 void soc_temp_sensor_tick(uint16_t msec);
 
+/*!
+ * SW workaround for TKT325413
+ * This function intializes the MSI ring setup based on the SS.
+ *
+ * @param[in]    cur_ss      SS undergoing the power transition
+ * @param[in]    parent      MSI master SS of the ring cur_ss belongs to
+ * @param[in]    from_mode   current power mode
+ * @param[in]    to_mode     new power mode requested
+ */
 void soc_setup_msi_slave_ring(sc_sub_t cur_ss, sc_sub_t parent,
     sc_pm_power_mode_t from_mode, sc_pm_power_mode_t to_mode);
+
+/*!
+ * SW workaround implementation for TKT325413
+ *
+ * @aparam[in]    from_mode       current power mode
+ * @param[in]    to_mode          new power mode requested
+ * @param[in]    msi_slv_ring     pointer to msi_ring_usecount structure
+ * @param[in]    num_msi_slaves   number of SS in the MSI ring
+ * @param[in]    msi_reg          pointer to the MSI_MSTR register for the MSI ring
+ * @param[in]    cur_ss           SS undergoing power transition
+ */
 void soc_msi_ring_workaround(sc_pm_power_mode_t from_mode,
     sc_pm_power_mode_t to_mode, soc_msi_ring_usecount_t *msi_slv_ring,
     uint32_t num_msi_slaves, MSI_MSTR_Type *msi_reg, sc_sub_t cur_ss);
@@ -1213,6 +1299,10 @@ void soc_msi_ring_workaround(sc_pm_power_mode_t from_mode,
 #ifdef ERR050601_WORKAROUND
 void soc_block_ap_set(sc_rm_pt_t pt, sc_rsrc_t resource);
 void soc_block_ap_memreg(sc_rm_mr_t mr, sc_rm_perm_t *perms);
+#endif
+
+#ifdef FLEXSPI_V2X_ADDR
+void soc_setup_v2x_fw_relocate(void);
 #endif
 
 /** @} */
@@ -1253,7 +1343,7 @@ soc_dbgapb_cluster_info_t *soc_dbgapb_get_indexed_cluster_info(uint8_t idx);
 soc_dbgapb_cpu_info_t *soc_dbgapb_get_cpu_info(sc_rsrc_t cpu_rsrc);
 
 sc_bool_t soc_dbgapb_halt(void);
-sc_bool_t soc_dbgapb_get_reg(sc_rsrc_t cpu_rsrc, uint8_t reg_idx,
+sc_bool_t soc_dbgapb_get_reg(sc_rsrc_t cpu_rsrc, uint8_t reg_idx, 
     uint32_t *reg_upper, uint32_t *reg_lower);
 sc_bool_t soc_dbgapb_get_L1line(sc_rsrc_t cpu_rsrc, sc_bool_t dcache,
     uint8_t way, uint16_t set,uint32_t *tag_upper,uint32_t *tag_lower,
